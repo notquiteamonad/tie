@@ -1,0 +1,10 @@
+cradle:
+  stack:
+    - path: "./src"
+      component: "tie:lib"
+
+    - path: "./app/Main.hs"
+      component: "tie:exe:tie-exe"
+
+    - path: "./app/Paths_tie.hs"
+      component: "tie:exe:tie-exe"
