@@ -6,12 +6,23 @@
       {
         "id": "3166c7b7734b9e8c",
         "type": "leaf",
-        "active": true,
         "pinned": true,
         "state": {
           "type": "graph",
           "state": {},
           "pinned": true
+        }
+      },
+      {
+        "id": "821e8f5197b8f266",
+        "type": "leaf",
+        "active": true,
+        "state": {
+          "type": "markdown",
+          "state": {
+            "file": "Processing `main`.md",
+            "mode": "source"
+          }
         }
       }
     ],
@@ -69,6 +80,7 @@
             "state": {
               "type": "backlink",
               "state": {
+                "file": "Processing `main`.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -85,9 +97,9 @@
     "collapsed": true
   },
   "lastOpenFiles": [
+    "Processing `main`.md",
     "The Process.md",
     "CLI args.md",
-    "Processing `main`.md",
     "the-parsing-process.md",
     "_start/TIE - Typescript Interoperator for Elm.md",
     "TIE - Typescript Interoperator for Elm.md"

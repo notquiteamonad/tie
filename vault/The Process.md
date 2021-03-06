@@ -1,4 +1,5 @@
 # The Process
+
 Initially, don't [[watch files]], we'll just work from a single fire and forget mechanism.
 
 1. Get all the files in a given directory (via a [[CLI args|CLI arg]])
