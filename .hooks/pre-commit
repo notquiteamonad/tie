@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+
+STASH_NAME="pre-commit-$(date +%s)"
+
+function makeStash {
+  git stash save -q --keep-index -m $STASH_NAME
+}
+
+function popStash {
+  git stash list | head -n 1 | grep -q $STASH_NAME
+  if [[ $? -eq 0 ]]; then
+    git reset --hard -q
+    git stash pop --index -q
+  fi
+}
+
+function exit_gracefully {
+  popStash
+  echo -en "\e[0m"
+  exit $1
+}
+
+makeStash
+
+# Check formatting
+for nonHaskellFile in $(git ls-files | sed '/\.hs$/d'); do
+  git checkout HEAD -- $nonHaskellFile
+done
+git commit --allow-empty -n -m "pre-commit-hook-commit" -q
+incorrectlyFormattedFileLines=$(git ls-files | sed '/\.hs$/!d' | xargs stylish-haskell -i && git diff-index --exit-code HEAD --)
+git reset --hard -q HEAD~1
+popStash
+makeStash
+if [[ $(echo $incorrectlyFormattedFileLines | wc -w) -gt 0 ]]; then
+  echo -e "\e[31mThe following files are formatted incorrectly:\e[0m\e[1m"
+  for file in $(echo "$incorrectlyFormattedFileLines" | awk '{print $NF}'); do
+    echo "  $file"
+  done
+  echo -e "Run \"\e[1mstylish-haskell -ir app src\e[0m\" to format them."
+  exit_gracefully 1
+fi
+
+# Run the linter
+hlint app src
+if [[ $? -ne 0 ]]; then
+  echo -e "\e[31mLinting failed - fix the above issues and try again.\e[0m"
+  exit_gracefully 1
+fi
+
+exit_gracefully 0

@@ -3,7 +3,18 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages: []
+packages:
+- completed:
+    name: base-noprelude
+    version: 4.14.1.0
+    git: https://github.com/jhrcek/base-noprelude.git
+    pantry-tree:
+      size: 823
+      sha256: b3226df5b2f565672cd83ed1cf88d98148142fd5759d9a68ceec77d4ead85338
+    commit: f382c80eb10521fb6a56d6451b6f983000cb010a
+  original:
+    git: https://github.com/jhrcek/base-noprelude.git
+    commit: f382c80eb10521fb6a56d6451b6f983000cb010a
 snapshots:
 - completed:
     size: 565266
