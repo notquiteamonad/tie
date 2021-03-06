@@ -1,20 +1,21 @@
-name:                tie
-version:             0.1.0.0
-github:              "notquiteamonad/tie"
-author:              "notquiteamonad"
-maintainer:          "44178347+notquiteamonad@users.noreply.github.com"
-copyright:           "Copyright notquiteamonad 2021"
+name: tie
+version: 0.1.0.0
+github: "notquiteamonad/tie"
+author: "notquiteamonad"
+maintainer: "44178347+notquiteamonad@users.noreply.github.com"
+copyright: "Copyright notquiteamonad 2021"
 
 default-extensions:
   - OverloadedStrings
 
-description:         Please see the README on GitHub at <https://github.com/notquiteamonad/tie#readme>
+description: Please see the README on GitHub at <https://github.com/notquiteamonad/tie#readme>
 
 dependencies:
-- base >= 4.7 && < 5
+  - base-noprelude >= 4.7 && < 5
+  - relude >= 0.7.0 && < 0.8
 
 extra-source-files:
-- README.md
+  - README.md
 
 ghc-options:
   - -Wall
@@ -24,11 +25,12 @@ library:
 
 executables:
   tie-exe:
-    main:                Main.hs
-    source-dirs:         app
+    main: Main.hs
+    source-dirs: app
     ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
+      - -O2
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
     dependencies:
-    - tie
+      - tie
