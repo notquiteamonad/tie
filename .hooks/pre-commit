@@ -30,8 +30,10 @@ if [[ $? -ne 0 ]]; then
 fi
 
 # Check formatting
-for nonHaskellFile in $(git ls-files | sed '/\.hs$/d'); do
-  git checkout HEAD -- $nonHaskellFile
+# Note: £ has been chosen as a character which will hopefully never appear in a filename.
+#       It's not catastrophic if it does; it'll just produce warnings.
+for nonHaskellFile in $(git ls-files | sed -e '/\.hs$/d' -e 's/ /£/g'); do
+  git checkout HEAD -- "$(echo -n $nonHaskellFile | sed 's/£/ /g')"
 done
 git commit --allow-empty -n -m "pre-commit-hook-commit" -q
 incorrectlyFormattedFileLines=$(git ls-files | sed '/\.hs$/!d' | xargs stylish-haskell -i && git diff-index --exit-code HEAD --)
