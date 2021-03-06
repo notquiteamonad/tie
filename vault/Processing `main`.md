@@ -15,4 +15,4 @@ export function init(options: {
 }): Elm.Main.App;
 ```
 
-This will probably rely on some [[TypeScript Function Type]] with a formatter. We'll also need a [[TypeScript Type Type]] and probably something like a `newtype` for [[TypeScript Identifier Type|TypeScript Identifiers]]
+This will rely on [[TypeScript Types]].

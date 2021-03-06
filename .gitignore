@@ -1,2 +1,6 @@
 .stack-work/
 *~
+
+# Obsidian files
+**/.obsidian/cache
+**/.obsidian/workspace
