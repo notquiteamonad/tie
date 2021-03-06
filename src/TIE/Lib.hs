@@ -2,7 +2,21 @@ module TIE.Lib
     ( interoperate
     ) where
 
-import           TIE.TypeScript
+import           TIE.TypeScript (Argument (Argument),
+                                 ArgumentName (ArgumentName),
+                                 Document (Document),
+                                 Exported (Exported, Private),
+                                 Function (Function),
+                                 FunctionName (FunctionName),
+                                 Interface (Interface),
+                                 InterfaceName (InterfaceName),
+                                 Member (MFunction, MProperty, MPropertyGroup),
+                                 Namespace (Namespace),
+                                 NamespaceMember (NMFunction, NMInterface, NMNamespace),
+                                 NamespaceName (NamespaceName),
+                                 PrimitiveName (PString, PVoid),
+                                 PropertyName (PropertyName),
+                                 TSType (TInterface, TPrimitive), writeDocument)
 
 interoperate :: IO ()
 interoperate = putTextLn . writeDocument $ Document values
@@ -19,13 +33,13 @@ interoperate = putTextLn . writeDocument $ Document values
                       ]
                     ]
                   ]
-                , NMFunction $ Function (FunctionName "init")
+                , NMFunction Exported $ Function (FunctionName "init")
                     []
                     (TInterface $ InterfaceName "Elm.Main.App")
+                , NMInterface $ Interface Exported (InterfaceName "UserInfo")
+                    [ MProperty (PropertyName "emailAddress") $ TPrimitive PString
+                    , MProperty (PropertyName "password") $ TPrimitive PString
+                    ]
                 ]
-              , NMInterface $ Interface Private (InterfaceName "UserInfo")
-                  [ MProperty (PropertyName "emailAddress") $ TPrimitive PString
-                  , MProperty (PropertyName "password") $ TPrimitive PString
-                  ]
               ]
           ]
