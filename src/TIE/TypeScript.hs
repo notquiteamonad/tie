@@ -3,7 +3,14 @@ module TIE.TypeScript where
 newtype Document = Document [Namespace] deriving (Eq, Show)
 
 writeDocument :: Document -> Text
-writeDocument (Document xs) = mconcat . intersperse "\n" $ write <$> xs
+writeDocument (Document xs) = onePerLine 0 writeNamespace xs
+
+onePerLine :: Int -> (Int -> a -> Text) -> [a] -> Text
+onePerLine indentation write xs = renderedIndentation <> (mconcat . intersperse ("\n" <> renderedIndentation) $ fmap (write indentation) xs)
+  where renderedIndentation = toText (replicate indentation ' ')
+
+nextIndentation :: Int -> Int
+nextIndentation = (+ 2)
 
 data Namespace = Namespace Exported NamespaceName NamespaceMembers
   deriving (Eq, Show)
@@ -64,5 +71,15 @@ newtype FunctionName = FunctionName Text deriving (Eq, Show)
 
 newtype ArgumentName = ArgumentName Text deriving (Eq, Show)
 
-write :: Namespace -> Text
-write _ = "UNDEFINED"
+writeNamespace :: Int -> Namespace -> Text
+writeNamespace indentation (Namespace exported (NamespaceName name) members) =
+  writeExported exported
+  <> "namespace "
+  <> name
+  <> "{\n"
+  <> onePerLine (nextIndentation indentation) (\_ _ -> "UNDEFINED") members
+  <> "\n}"
+
+writeExported :: Exported -> Text
+writeExported Exported = "export "
+writeExported Private  = ""
