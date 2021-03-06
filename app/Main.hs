@@ -1,6 +1,6 @@
 module Main where
 
-import           Lib
+import           TIE.Lib (interoperate)
 
 main :: IO ()
-main = someFunc
+main = interoperate

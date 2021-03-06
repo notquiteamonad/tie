@@ -22,8 +22,9 @@ source-repository head
 
 library
   exposed-modules:
-      Lib
       Prelude
+      TIE.Lib
+      TIE.TypeScript
   other-modules:
       Paths_tie
   hs-source-dirs:
