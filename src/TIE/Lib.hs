@@ -7,22 +7,14 @@ import           TIE.Elm.Main   (generateInitFunction)
 import           TIE.Elm.Ports  (generatePortProperties)
 import           TIE.Elm.Types  (findType)
 import           TIE.FS         (getAllElmFilesIn)
-import           TIE.TypeScript (Argument (Argument),
-                                 ArgumentName (ArgumentName),
-                                 Document (Document),
+import           TIE.TypeScript (Document (Document),
                                  Exported (Exported, Private),
-                                 Function (Function),
-                                 FunctionName (FunctionName),
                                  Interface (Interface),
                                  InterfaceName (InterfaceName),
-                                 Member (MFunction, MProperty, MPropertyGroup),
-                                 Namespace (Namespace),
+                                 Member (MPropertyGroup), Namespace (Namespace),
                                  NamespaceMember (NMInterface, NMNamespace),
                                  NamespaceName (NamespaceName),
-                                 PrimitiveName (PString, PVoid),
-                                 PropertyName (PropertyName),
-                                 TSType (TInlineInterface, TPrimitive),
-                                 writeDocument)
+                                 PropertyName (PropertyName), writeDocument)
 
 interoperate :: FilePath -> IO ()
 interoperate dirname = do

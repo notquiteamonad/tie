@@ -2,7 +2,7 @@ module TIE.Elm.Main (generateInitFunction) where
 
 import           Data.Text          (isSuffixOf, strip)
 import qualified Data.Text          as T (isPrefixOf, null)
-import           Data.Text.IO       (hGetLine)
+import           Data.Text.IO       (hGetLine, hPutStrLn)
 import           GHC.IO.Handle      (hIsEOF)
 import           TIE.Elm.Expression (readNextExpression)
 import           TIE.Elm.Types      (ElmType (CustomType, ElmPrimitiveType),
@@ -23,7 +23,7 @@ generateInitFunction :: [FilePath] -> IO (NamespaceMember, Maybe NeededCustomTyp
 generateInitFunction paths = do
   let mainPath = fromMaybe (error "Could not find a Main.elm in the directory given") .
                   viaNonEmpty head $ filter (\path -> "Main.elm" `isSuffixOf` toText path) paths
-  putStrLn $ "Reading main from " <> mainPath
+  hPutStrLn stderr . toText $ "Reading main from " <> mainPath
   mainDefinition <- withFile mainPath ReadMode (`buildMain` [])
   let flags = elmTypeFromText . fromMaybe (error "Could not read flags type from main definition") .
                 readNextExpression . unwords . drop 3 $ words mainDefinition
