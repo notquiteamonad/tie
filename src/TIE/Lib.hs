@@ -4,6 +4,7 @@ module TIE.Lib
 
 import           GHC.IO.Device  (IODeviceType (Directory))
 import           TIE.Elm.Main   (generateInitFunction)
+import           TIE.Elm.Types  (findType)
 import           TIE.FS         (getAllElmFilesIn)
 import           TIE.TypeScript (Argument (Argument),
                                  ArgumentName (ArgumentName),
@@ -25,11 +26,13 @@ import           TIE.TypeScript (Argument (Argument),
 interoperate :: FilePath -> IO ()
 interoperate dirname = do
   elmFiles <- getAllElmFilesIn (dirname, Directory)
-  initFunction <- generateInitFunction elmFiles
-  putTextLn . writeDocument . Document $ values initFunction
-    where values initF =
+  (initFunction, neededCustomFlagType) <- generateInitFunction elmFiles
+  let neededCustomTypes = catMaybes [neededCustomFlagType]
+  additionalInterfaces <- forM neededCustomTypes (findType elmFiles)
+  putTextLn . writeDocument . Document $ values initFunction additionalInterfaces
+    where values initF additionalIs =
             [ Namespace Exported (NamespaceName "Elm")
-                [ NMNamespace $ Namespace Private (NamespaceName "Main")
+                [ NMNamespace . Namespace Private (NamespaceName "Main") $
                   [ NMInterface $ Interface Exported (InterfaceName "App")
                     [ MPropertyGroup (PropertyName "ports")
                       [ MPropertyGroup (PropertyName "handleSignIn")
@@ -47,6 +50,6 @@ interoperate dirname = do
                       ]
                     ]
                   , initF
-                  ]
+                  ] <> (NMInterface <$> additionalIs)
                 ]
             ]
