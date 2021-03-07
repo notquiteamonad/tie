@@ -1,16 +1,24 @@
 module TIE.TypeScript where
 
+import           Data.Text (replace)
+
 newtype Document = Document [Namespace] deriving (Eq, Show)
 
 writeDocument :: Document -> Text
-writeDocument (Document xs) = onePerLine 0 writeNamespace xs
+writeDocument (Document xs) = replace "; }" " }" $ onePerLine (Indented 0) writeNamespace xs
 
-onePerLine :: Int -> (Int -> a -> Text) -> [a] -> Text
-onePerLine indentation write xs = renderedIndentation <> (mconcat . intersperse ("\n" <> renderedIndentation) $ fmap (write indentation) xs)
+data Indentation
+  = Indented Int
+  | Inline
+
+onePerLine :: Indentation -> (Indentation -> a -> Text) -> [a] -> Text
+onePerLine i@(Indented indentation) write xs = renderedIndentation <> (mconcat . intersperse ("\n" <> renderedIndentation) $ fmap (write i) xs)
   where renderedIndentation = toText (replicate indentation ' ')
+onePerLine Inline _ _ = error "onePerLine cannot be called inline"
 
-nextIndentation :: Int -> Int
-nextIndentation = (+ 2)
+nextIndentation :: Indentation -> Indentation
+nextIndentation (Indented indentation) = Indented $ indentation + 2
+nextIndentation Inline                 = Inline
 
 data Namespace = Namespace Exported NamespaceName NamespaceMembers
   deriving (Eq, Show)
@@ -49,8 +57,13 @@ type ReturnType = TSType
 
 data TSType
   = TInterface InterfaceName
+  | TInlineInterface Members
   | TPrimitive PrimitiveName
+  | TUnion TSType TSType
   deriving (Eq, Show)
+
+instance Semigroup TSType where
+  a <> b = a `TUnion` b
 
 data PrimitiveName
   = PString
@@ -71,12 +84,12 @@ newtype FunctionName = FunctionName Text deriving (Eq, Show)
 
 newtype ArgumentName = ArgumentName Text deriving (Eq, Show)
 
-writeNamespace :: Int -> Namespace -> Text
+writeNamespace :: Indentation -> Namespace -> Text
 writeNamespace indentation (Namespace exported (NamespaceName name) members) =
   writeExported exported
   <> "namespace "
   <> name
-  <> writeOpeningBrace
+  <> writeOpeningBrace indentation
   <> onePerLine (nextIndentation indentation) writeNamespaceMember members
   <> writeClosingBrace indentation
 
@@ -84,45 +97,56 @@ writeExported :: Exported -> Text
 writeExported Exported = "export "
 writeExported Private  = ""
 
-writeOpeningBrace :: Text
-writeOpeningBrace = " {\n"
+writeOpeningBrace :: Indentation -> Text
+writeOpeningBrace (Indented _) = " {\n"
+writeOpeningBrace Inline       = "{ "
 
-writeClosingBrace :: Int -> Text
-writeClosingBrace indentation =  "\n" <> toText (replicate indentation ' ') <> "}"
+writeClosingBrace :: Indentation -> Text
+writeClosingBrace (Indented indentation) =  "\n" <> toText (replicate indentation ' ') <> "}"
+writeClosingBrace Inline =  " }"
 
-writeNamespaceMember :: Int -> NamespaceMember -> Text
+writeNamespaceMember :: Indentation -> NamespaceMember -> Text
 writeNamespaceMember indentation (NMNamespace n) = writeNamespace indentation n
 writeNamespaceMember indentation (NMInterface i) = writeInterface indentation i
-writeNamespaceMember _ (NMFunction exported f)  = writeExported exported <> writeFunction f
+writeNamespaceMember _ (NMFunction exported f)  = writeExported exported <> "function " <> writeFunction f
 
-writeInterface :: Int -> Interface -> Text
+writeInterface :: Indentation -> Interface -> Text
 writeInterface indentation (Interface exported (InterfaceName name) members) =
   writeExported exported
   <> "interface "
   <> name
-  <> writeOpeningBrace
+  <> writeOpeningBrace indentation
   <> onePerLine (nextIndentation indentation) writeMember members
   <> writeClosingBrace indentation
 
-writeMember :: Int -> Member -> Text
+writeMember :: Indentation -> Member -> Text
 writeMember indentation (MPropertyGroup name members) = writePropertyGroup indentation name members
 writeMember _ (MProperty name t)       = writeProperty name t
 writeMember _ (MFunction f)       = writeFunction f
 
-writePropertyGroup :: Int -> PropertyName -> Members -> Text
+writePropertyGroup :: Indentation -> PropertyName -> Members -> Text
 writePropertyGroup indentation (PropertyName name) members =
   name
   <> ":"
-  <> writeOpeningBrace
+  <> writeOpeningBrace indentation
   <> onePerLine (nextIndentation indentation) writeMember members
   <> writeClosingBrace indentation
+  <> ";"
 
 writeProperty :: PropertyName -> TSType -> Text
 writeProperty (PropertyName name) t = name <> ": " <> writeTSType t <> ";"
 
 writeTSType :: TSType -> Text
 writeTSType (TInterface (InterfaceName i)) = i
+writeTSType (TInlineInterface members) = writeInlineInterface members
 writeTSType (TPrimitive p)                 = writePrimitiveType p
+writeTSType (a `TUnion` b) = writeTSType a <> " | " <> writeTSType b
+
+writeInlineInterface :: Members -> Text
+writeInlineInterface members =
+  writeOpeningBrace Inline
+  <> mconcat (intersperse " " $ writeMember Inline <$> members)
+  <> writeClosingBrace Inline
 
 writePrimitiveType :: PrimitiveName -> Text
 writePrimitiveType PString  = "string"
@@ -134,12 +158,12 @@ writePrimitiveType PVoid    = "void"
 
 writeFunction :: Function -> Text
 writeFunction (Function (FunctionName name) arguments returnType) =
-  "function "
-  <> name
+  name
   <> "("
   <> mconcat (intersperse ", " $ writeArgument <$> arguments)
   <> "): "
   <> writeTSType returnType
+  <> ";"
 
 writeArgument :: Argument -> Text
 writeArgument (Argument (ArgumentName name) t) = name <> ": " <> writeTSType t
