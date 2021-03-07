@@ -7,6 +7,7 @@ module TIE.TypeScript
   , FunctionName (FunctionName)
   , Interface (Interface)
   , InterfaceName (InterfaceName)
+  , Members
   , Member (MFunction, MProperty, MPropertyGroup)
   , Namespace (Namespace)
   , NamespaceMember (NMFunction, NMInterface, NMNamespace)

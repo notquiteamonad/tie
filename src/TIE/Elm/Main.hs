@@ -5,26 +5,40 @@ import qualified Data.Text          as T (isPrefixOf, null)
 import           Data.Text.IO       (hGetLine)
 import           GHC.IO.Handle      (hIsEOF)
 import           TIE.Elm.Expression (readNextExpression)
-import           TIE.Elm.Types      (elmTypeToTSType)
-import           TIE.TypeScript
+import           TIE.Elm.Types      (ElmType (CustomType, ElmPrimitiveType),
+                                     NeededCustomType, elmTypeFromText,
+                                     elmTypeToTSType)
+import           TIE.TypeScript     (Argument (Argument),
+                                     ArgumentName (ArgumentName),
+                                     Exported (Exported), Function (Function),
+                                     FunctionName (FunctionName),
+                                     InterfaceName (InterfaceName),
+                                     Member (MProperty),
+                                     NamespaceMember (NMFunction),
+                                     PrimitiveName (PNull),
+                                     PropertyName (PropertyName),
+                                     TSType (TInlineInterface, TInterface, TPrimitive))
 
-generateInitFunction :: [FilePath] -> IO NamespaceMember
+generateInitFunction :: [FilePath] -> IO (NamespaceMember, Maybe NeededCustomType)
 generateInitFunction paths = do
   let mainPath = fromMaybe (error "Could not find a Main.elm in the directory given") .
                   viaNonEmpty head $ filter (\path -> "Main.elm" `isSuffixOf` toText path) paths
   putStrLn $ "Reading main from " <> mainPath
   mainDefinition <- withFile mainPath ReadMode (`buildMain` [])
-  let flags = fromMaybe (error "Could not parse flags type from main definition") .
-                elmTypeToTSType . fromMaybe (error "Could not read flags type from main definition") .
+  let flags = elmTypeFromText . fromMaybe (error "Could not read flags type from main definition") .
                 readNextExpression . unwords . drop 3 $ words mainDefinition
-  pure . NMFunction Exported $ Function (FunctionName "init")
+  pure ( NMFunction Exported $ Function (FunctionName "init")
           [ Argument (ArgumentName "options") . TInlineInterface $
             MProperty (PropertyName "node?") (TInterface (InterfaceName "HTMLElement") <> TPrimitive PNull)
             : case flags of
-                TPrimitive PNull -> []
-                flagsType        -> [MProperty (PropertyName "flags") flagsType]
+                ElmPrimitiveType (TPrimitive PNull) -> []
+                elmType                  -> [MProperty (PropertyName "flags") $ elmTypeToTSType elmType]
           ]
           (TInterface $ InterfaceName "Elm.Main.App")
+       , case flags of
+          CustomType _ c -> pure c
+          _              -> Nothing
+       )
 
 buildMain :: Handle -> [Text] -> IO Text
 buildMain h acc = do
