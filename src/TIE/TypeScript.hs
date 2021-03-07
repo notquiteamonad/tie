@@ -11,9 +11,9 @@ module TIE.TypeScript
   , Namespace (Namespace)
   , NamespaceMember (NMFunction, NMInterface, NMNamespace)
   , NamespaceName (NamespaceName)
-  , PrimitiveName (PNull, PString, PVoid)
+  , PrimitiveName (PString, PNumber, PBoolean, PUnknown, PNull, PVoid)
   , PropertyName (PropertyName)
-  , TSType (TInlineInterface, TInterface, TPrimitive)
+  , TSType (TInterface, TInlineInterface, TPrimitive)
   , writeDocument
   ) where
 
@@ -80,6 +80,11 @@ data TSType
   deriving (Eq, Show)
 
 instance Semigroup TSType where
+  lhs@(TPrimitive PNull `TUnion` _) <> TPrimitive PNull = lhs
+  lhs@(_ `TUnion` TPrimitive PNull) <> TPrimitive PNull = lhs
+  TPrimitive PNull <> rhs@(TPrimitive PNull `TUnion` _) = rhs
+  TPrimitive PNull <> rhs@(_ `TUnion` TPrimitive PNull) = rhs
+  TPrimitive PNull <> rhs = rhs `TUnion` TPrimitive PNull
   a <> b = a `TUnion` b
 
 data PrimitiveName
