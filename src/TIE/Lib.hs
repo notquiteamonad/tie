@@ -33,7 +33,7 @@ interoperate dirname = do
   let mainFile = getMainElmFile elmFiles
   let dir = fromMaybe (error "Can't create output directory") $ stripSuffix ".elm" (toText mainFile)
   createDirectoryIfMissing True (toString dir)
-  let outputFileName = dir <> "/Main.d.ts"
+  let outputFileName = dir <> "/index.d.ts"
   writeFile (toString outputFileName) . toString . writeDocument . Document $
     values initFunction additionalInterfaces portProperties
   putTextLn $ "Done! You can see the generated type definitions at " <> outputFileName
