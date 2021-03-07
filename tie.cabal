@@ -25,6 +25,7 @@ library
       Prelude
       TIE.Elm.Expression
       TIE.Elm.Main
+      TIE.Elm.Ports
       TIE.Elm.Types
       TIE.FS
       TIE.Lib

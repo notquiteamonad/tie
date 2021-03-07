@@ -7,14 +7,19 @@ import qualified Data.Text      as T (drop, dropEnd, dropWhile, head, null,
                                       reverse, take, takeWhile)
 import           Data.Text.IO   (hGetLine)
 import           GHC.IO.Handle  (hIsEOF)
-import           TIE.TypeScript
+import           TIE.TypeScript (Exported (Exported), Interface (..),
+                                 InterfaceName (InterfaceName),
+                                 Member (MProperty, MPropertyGroup), Members,
+                                 PrimitiveName (PBoolean, PNull, PNumber, PString, PUnknown),
+                                 PropertyName (PropertyName),
+                                 TSType (TInterface, TPrimitive))
 
 data ElmType
   = ElmPrimitiveType TSType
   | CustomType TSType NeededCustomType
   deriving (Eq, Show)
 
-newtype NeededCustomType = NeededCustomType Text deriving (Eq, Show)
+newtype NeededCustomType = NeededCustomType Text deriving (Eq, Ord, Show)
 
 elmTypeFromText :: Text -> ElmType
 elmTypeFromText t = case strip t of

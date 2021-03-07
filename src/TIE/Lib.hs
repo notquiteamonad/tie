@@ -4,6 +4,7 @@ module TIE.Lib
 
 import           GHC.IO.Device  (IODeviceType (Directory))
 import           TIE.Elm.Main   (generateInitFunction)
+import           TIE.Elm.Ports  (generatePortProperties)
 import           TIE.Elm.Types  (findType)
 import           TIE.FS         (getAllElmFilesIn)
 import           TIE.TypeScript (Argument (Argument),
@@ -27,27 +28,17 @@ interoperate :: FilePath -> IO ()
 interoperate dirname = do
   elmFiles <- getAllElmFilesIn (dirname, Directory)
   (initFunction, neededCustomFlagType) <- generateInitFunction elmFiles
-  let neededCustomTypes = catMaybes [neededCustomFlagType]
+  (portProperties, neededCustomPortTypes) <- generatePortProperties elmFiles
+  let neededCustomTypes = sortNub $ case neededCustomFlagType of
+        Just ncft -> ncft : neededCustomPortTypes
+        Nothing   -> neededCustomPortTypes
   additionalInterfaces <- forM neededCustomTypes (findType elmFiles)
-  putTextLn . writeDocument . Document $ values initFunction additionalInterfaces
-    where values initF additionalIs =
+  putTextLn . writeDocument . Document $ values initFunction additionalInterfaces portProperties
+    where values initF additionalIs ports =
             [ Namespace Exported (NamespaceName "Elm")
                 [ NMNamespace . Namespace Private (NamespaceName "Main") $
                   [ NMInterface $ Interface Exported (InterfaceName "App")
-                    [ MPropertyGroup (PropertyName "ports")
-                      [ MPropertyGroup (PropertyName "handleSignIn")
-                        [ MFunction $ Function (FunctionName "send")
-                          [ Argument (ArgumentName "data") $ TInlineInterface
-                            [ MProperty (PropertyName "emailAddress") $ TPrimitive PString
-                            , MProperty (PropertyName "password") $ TPrimitive PString
-                            ]
-                          ]
-                          (TPrimitive PVoid)
-                        ]
-                      , MPropertyGroup (PropertyName "handleSignOut")
-                        [ MFunction $ Function (FunctionName "subscribe") [] (TPrimitive PVoid)
-                        ]
-                      ]
+                    [ MPropertyGroup (PropertyName "ports") ports
                     ]
                   , initF
                   ] <> (NMInterface <$> additionalIs)
