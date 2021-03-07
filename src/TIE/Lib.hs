@@ -3,6 +3,7 @@ module TIE.Lib
     ) where
 
 import           GHC.IO.Device  (IODeviceType (Directory))
+import           TIE.Elm.Main   (generateInitFunction)
 import           TIE.FS         (getAllElmFilesIn)
 import           TIE.TypeScript (Argument (Argument),
                                  ArgumentName (ArgumentName),
@@ -14,19 +15,19 @@ import           TIE.TypeScript (Argument (Argument),
                                  InterfaceName (InterfaceName),
                                  Member (MFunction, MProperty, MPropertyGroup),
                                  Namespace (Namespace),
-                                 NamespaceMember (NMFunction, NMInterface, NMNamespace),
+                                 NamespaceMember (NMInterface, NMNamespace),
                                  NamespaceName (NamespaceName),
-                                 PrimitiveName (PNull, PString, PVoid),
+                                 PrimitiveName (PString, PVoid),
                                  PropertyName (PropertyName),
-                                 TSType (TInlineInterface, TInterface, TPrimitive),
+                                 TSType (TInlineInterface, TPrimitive),
                                  writeDocument)
 
 interoperate :: FilePath -> IO ()
 interoperate dirname = do
   elmFiles <- getAllElmFilesIn (dirname, Directory)
-  putStrLn . mconcat $ intersperse "\n" elmFiles
-  putTextLn . writeDocument $ Document values
-    where values =
+  initFunction <- generateInitFunction elmFiles
+  putTextLn . writeDocument . Document $ values initFunction
+    where values initF =
             [ Namespace Exported (NamespaceName "Elm")
                 [ NMNamespace $ Namespace Private (NamespaceName "Main")
                   [ NMInterface $ Interface Exported (InterfaceName "App")
@@ -45,12 +46,7 @@ interoperate dirname = do
                         ]
                       ]
                     ]
-                  , NMFunction Exported $ Function (FunctionName "init")
-                      [ Argument (ArgumentName "options") $ TInlineInterface
-                        [ MProperty (PropertyName "node?") (TInterface (InterfaceName "HTMLElement") <> TPrimitive PNull)
-                        ]
-                      ]
-                      (TInterface $ InterfaceName "Elm.Main.App")
+                  , initF
                   ]
                 ]
             ]

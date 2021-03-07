@@ -7,4 +7,5 @@
 | `Bool`              | `boolean`                            |
 | `Json.Decode.Value` | `unknown`                            |
 | `Json.Encode.Value` | `unknown`                            |
+| `()`                | `null`                               |
 | `Maybe a`           | `a | null`                           |

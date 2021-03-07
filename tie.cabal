@@ -23,6 +23,9 @@ source-repository head
 library
   exposed-modules:
       Prelude
+      TIE.Elm.Expression
+      TIE.Elm.Main
+      TIE.Elm.Types
       TIE.FS
       TIE.Lib
       TIE.TypeScript
