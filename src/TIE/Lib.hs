@@ -14,9 +14,10 @@ import           TIE.TypeScript (Argument (Argument),
                                  Namespace (Namespace),
                                  NamespaceMember (NMFunction, NMInterface, NMNamespace),
                                  NamespaceName (NamespaceName),
-                                 PrimitiveName (PString, PVoid),
+                                 PrimitiveName (PNull, PString, PVoid),
                                  PropertyName (PropertyName),
-                                 TSType (TInterface, TPrimitive), writeDocument)
+                                 TSType (TInlineInterface, TInterface, TPrimitive),
+                                 writeDocument)
 
 interoperate :: IO ()
 interoperate = putTextLn . writeDocument $ Document values
@@ -27,19 +28,24 @@ interoperate = putTextLn . writeDocument $ Document values
                   [ MPropertyGroup (PropertyName "ports")
                     [ MPropertyGroup (PropertyName "handleSignIn")
                       [ MFunction $ Function (FunctionName "send")
-                        [ Argument (ArgumentName "data") . TInterface $ InterfaceName "Elm.Main.UserInfo"
+                        [ Argument (ArgumentName "data") $ TInlineInterface
+                          [ MProperty (PropertyName "emailAddress") $ TPrimitive PString
+                          , MProperty (PropertyName "password") $ TPrimitive PString
+                          ]
                         ]
                         (TPrimitive PVoid)
+                      ]
+                    , MPropertyGroup (PropertyName "handleSignOut")
+                      [ MFunction $ Function (FunctionName "subscribe") [] (TPrimitive PVoid)
                       ]
                     ]
                   ]
                 , NMFunction Exported $ Function (FunctionName "init")
-                    []
-                    (TInterface $ InterfaceName "Elm.Main.App")
-                , NMInterface $ Interface Exported (InterfaceName "UserInfo")
-                    [ MProperty (PropertyName "emailAddress") $ TPrimitive PString
-                    , MProperty (PropertyName "password") $ TPrimitive PString
+                    [ Argument (ArgumentName "options") $ TInlineInterface
+                      [ MProperty (PropertyName "node?") (TInterface (InterfaceName "HTMLElement") <> TPrimitive PNull)
+                      ]
                     ]
+                    (TInterface $ InterfaceName "Elm.Main.App")
                 ]
               ]
           ]
