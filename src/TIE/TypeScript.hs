@@ -14,7 +14,7 @@ module TIE.TypeScript
   , NamespaceName (NamespaceName)
   , PrimitiveName (PString, PNumber, PBoolean, PUnknown, PNull, PVoid)
   , PropertyName (PropertyName)
-  , TSType (TInterface, TInlineInterface, TPrimitive)
+  , TSType (TInterface, TInlineInterface, TFunction, TPrimitive)
   , writeDocument
   ) where
 
@@ -76,6 +76,7 @@ type ReturnType = TSType
 data TSType
   = TInterface InterfaceName
   | TInlineInterface Members
+  | TFunction Arguments ReturnType
   | TPrimitive PrimitiveName
   | TUnion TSType TSType
   deriving (Eq, Show)
@@ -162,6 +163,7 @@ writeProperty (PropertyName name) t = name <> ": " <> writeTSType t <> ";"
 writeTSType :: TSType -> Text
 writeTSType (TInterface (InterfaceName i)) = i
 writeTSType (TInlineInterface members) = writeInlineInterface members
+writeTSType (TFunction args returnType)                 = writeAnonymousFunctionType args returnType
 writeTSType (TPrimitive p)                 = writePrimitiveType p
 writeTSType (a `TUnion` b) = writeTSType a <> " | " <> writeTSType b
 
@@ -170,6 +172,13 @@ writeInlineInterface members =
   writeOpeningBrace Inline
   <> mconcat (intersperse " " $ writeMember Inline <$> members)
   <> writeClosingBrace Inline
+
+writeAnonymousFunctionType :: Arguments -> ReturnType -> Text
+writeAnonymousFunctionType args returnType =
+  "("
+  <> mconcat (intersperse ", " $ writeArgument <$> args)
+  <> ") => "
+  <> writeTSType returnType
 
 writePrimitiveType :: PrimitiveName -> Text
 writePrimitiveType PString  = "string"
