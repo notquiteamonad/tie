@@ -1,13 +1,13 @@
 module TIE.Elm.Main (generateInitFunction) where
 
-import           Data.Text          (isSuffixOf, strip)
-import qualified Data.Text          as T (isPrefixOf, null)
-import           Data.Text.IO       (hGetLine, hPutStrLn)
+import qualified Data.Text          as T (isPrefixOf, null, strip)
+import           Data.Text.IO       (hGetLine)
 import           GHC.IO.Handle      (hIsEOF)
 import           TIE.Elm.Expression (readNextExpression)
 import           TIE.Elm.Types      (ElmType (CustomType, ElmPrimitiveType),
                                      NeededCustomType, elmTypeFromText,
                                      elmTypeToTSType)
+import           TIE.FS             (getMainElmFile)
 import           TIE.TypeScript     (Argument (Argument),
                                      ArgumentName (ArgumentName),
                                      Exported (Exported), Function (Function),
@@ -21,9 +21,8 @@ import           TIE.TypeScript     (Argument (Argument),
 
 generateInitFunction :: [FilePath] -> IO (NamespaceMember, Maybe NeededCustomType)
 generateInitFunction paths = do
-  let mainPath = fromMaybe (error "Could not find a Main.elm in the directory given") .
-                  viaNonEmpty head $ filter (\path -> "Main.elm" `isSuffixOf` toText path) paths
-  hPutStrLn stderr . toText $ "Reading main from " <> mainPath
+  let mainPath = getMainElmFile paths
+  putStrLn $ "Reading main from " <> mainPath
   mainDefinition <- withFile mainPath ReadMode (`buildMain` [])
   let flags = elmTypeFromText . fromMaybe (error "Could not read flags type from main definition") .
                 readNextExpression . unwords . drop 3 $ words mainDefinition
@@ -49,8 +48,8 @@ buildMain h acc = do
   else do
     l <- hGetLine h
     if null acc then
-      if "main :" `T.isPrefixOf` strip l then buildMain h $ l : acc
+      if "main :" `T.isPrefixOf` T.strip l then buildMain h $ l : acc
       else buildMain h acc
-    else if T.null (strip l) || "main =" `T.isPrefixOf` strip l then wrapUp acc
+    else if T.null (T.strip l) || "main =" `T.isPrefixOf` T.strip l then wrapUp acc
     else buildMain h $ l : acc
   where wrapUp = pure . mconcat . intersperse "\n" . reverse
