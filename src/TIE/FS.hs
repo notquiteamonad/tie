@@ -1,5 +1,6 @@
 module TIE.FS
   ( getAllElmFilesIn
+  , getMainElmFile
   ) where
 
 import           Data.Text              (isSuffixOf)
@@ -21,6 +22,10 @@ getAllElmFilesIn (f, t) = case t of
   RegularFile ->
     pure [elmFile | ".elm" `isSuffixOf` toText f, elmFile <- [f]]
   _ -> pure []
+
+getMainElmFile :: [FilePath] -> FilePath
+getMainElmFile paths = fromMaybe (error "Could not find a Main.elm in the directory given") .
+                        viaNonEmpty head $ filter (\path -> "Main.elm" `isSuffixOf` toText path) paths
 
 
 fileTypeTuple :: FilePath -> IO (FilePath, IODeviceType)

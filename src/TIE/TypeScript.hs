@@ -23,7 +23,7 @@ import           Data.Text (replace)
 newtype Document = Document [Namespace] deriving (Eq, Show)
 
 writeDocument :: Document -> Text
-writeDocument (Document xs) = replace "; }" " }" $ onePerLine (Indented 0) writeNamespace xs
+writeDocument (Document xs) = replace "; }" " }" (onePerLine (Indented 0) writeNamespace xs) <> "\n"
 
 data Indentation
   = Indented Int
