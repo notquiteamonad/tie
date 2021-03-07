@@ -19,8 +19,8 @@ import           TIE.TypeScript (Argument (Argument),
                                  TSType (TInlineInterface, TInterface, TPrimitive),
                                  writeDocument)
 
-interoperate :: IO ()
-interoperate = putTextLn . writeDocument $ Document values
+interoperate :: FilePath -> IO ()
+interoperate dirname = putTextLn . writeDocument $ Document values
   where values =
           [ Namespace Exported (NamespaceName "Elm")
               [ NMNamespace $ Namespace Private (NamespaceName "Main")

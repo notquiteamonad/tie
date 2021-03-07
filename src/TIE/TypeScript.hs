@@ -1,4 +1,21 @@
-module TIE.TypeScript where
+module TIE.TypeScript
+  ( Argument (Argument)
+  , ArgumentName (ArgumentName)
+  , Document (Document)
+  , Exported (Exported, Private)
+  , Function (Function)
+  , FunctionName (FunctionName)
+  , Interface (Interface)
+  , InterfaceName (InterfaceName)
+  , Member (MFunction, MProperty, MPropertyGroup)
+  , Namespace (Namespace)
+  , NamespaceMember (NMFunction, NMInterface, NMNamespace)
+  , NamespaceName (NamespaceName)
+  , PrimitiveName (PNull, PString, PVoid)
+  , PropertyName (PropertyName)
+  , TSType (TInlineInterface, TInterface, TPrimitive)
+  , writeDocument
+  ) where
 
 import           Data.Text (replace)
 
