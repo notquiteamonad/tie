@@ -7,6 +7,7 @@ import qualified Data.Text      as T (drop, dropEnd, dropWhile, head, null,
                                       reverse, take, takeWhile)
 import           Data.Text.IO   (hGetLine)
 import           GHC.IO.Handle  (hIsEOF)
+import           TIE.Response   (Response (..))
 import           TIE.TypeScript (Exported (Exported), Interface (..),
                                  InterfaceName (InterfaceName),
                                  Member (MProperty, MPropertyGroup), Members,
@@ -42,13 +43,16 @@ elmTypeToTSType :: ElmType -> TSType
 elmTypeToTSType (ElmPrimitiveType t) = t
 elmTypeToTSType (CustomType t _)     = t
 
-findType :: [FilePath] -> NeededCustomType -> IO Interface
+findType :: [FilePath] -> NeededCustomType -> IO (Response Text Interface)
 findType paths nct@(NeededCustomType c) = do
   case nonEmpty paths of
     Just paths' ->
-        maybe (findType (tail paths') nct) (pure . parseRecordType recordName) =<<
+        maybe (findType (tail paths') nct) (pure . pure . parseRecordType recordName) =<<
           withFile (head paths') ReadMode \h -> findRecordTypeInFile h recordName 0 []
-    Nothing -> error $ "Could not find custom type " <> recordName <> ". Is it a record type defined within your app?"
+    Nothing ->
+      pure . Failed $ "Could not find custom type "
+      <> recordName
+      <> ". Is it a record type defined within the directory specified?"
     where recordName = replace "Elm.Main." "" c
 
 findRecordTypeInFile :: Handle -> Text -> Int -> [Text] -> IO (Maybe Text)

@@ -32,7 +32,7 @@ data Indentation
 onePerLine :: Indentation -> (Indentation -> a -> Text) -> [a] -> Text
 onePerLine i@(Indented indentation) write xs = renderedIndentation <> (mconcat . intersperse ("\n" <> renderedIndentation) $ fmap (write i) xs)
   where renderedIndentation = toText (replicate indentation ' ')
-onePerLine Inline _ _ = error "onePerLine cannot be called inline"
+onePerLine Inline _ _ = error "Internal: onePerLine cannot be called inline"
 
 nextIndentation :: Indentation -> Indentation
 nextIndentation (Indented indentation) = Indented $ indentation + 2
