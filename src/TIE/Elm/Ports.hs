@@ -1,4 +1,5 @@
 {-# LANGUAGE BlockArguments #-}
+{-# LANGUAGE LambdaCase     #-}
 {-# LANGUAGE NamedFieldPuns #-}
 
 module TIE.Elm.Ports (generatePortProperties) where
@@ -11,6 +12,7 @@ import           GHC.IO.Handle      (hIsEOF)
 import           TIE.Elm.Expression (readNextExpression)
 import           TIE.Elm.Types      (ElmType (..), NeededCustomType,
                                      elmTypeFromText, elmTypeToTSType)
+import           TIE.Response       (Response (..), catFailures, catSuccessess)
 import           TIE.TypeScript     (Argument (Argument),
                                      ArgumentName (ArgumentName),
                                      Function (Function),
@@ -30,18 +32,24 @@ data PortDirection = In | Out deriving (Eq, Show)
 
 newtype PortName = PortName {unPortName :: Text} deriving (Eq, Show)
 
-generatePortProperties :: [FilePath] -> IO (Members, [NeededCustomType])
-generatePortProperties paths = do
-  ports <- getPortsFromPaths paths
-  pure
-    ( toMember <$> ports
-    , getCustomTypes ports []
-    )
+generatePortProperties :: [FilePath] -> IO (Response Text (Members, [NeededCustomType]))
+generatePortProperties paths = getPortsFromPaths paths >>= \case
+  Ok ports ->
+    pure $ pure
+      ( toMember <$> ports
+      , getCustomTypes ports []
+      )
+  Failed e -> pure $ Failed e
 
-getPortsFromPaths :: [FilePath] -> IO [Port]
+getPortsFromPaths :: [FilePath] -> IO (Response Text [Port])
 getPortsFromPaths paths = do
   portBodies <- concat <$> forM paths \path -> withFile path ReadMode \h -> getPortsFromModule h False []
-  pure $ parsePort <$> portBodies
+  let portResponses = parsePort <$> portBodies
+  let successes = catSuccessess portResponses
+  if length successes == length portResponses then
+    pure $ Ok successes
+  else
+    pure . Failed . mconcat . intersperse "\n" $ catFailures portResponses
 
 toMember :: Port -> Member
 toMember Port {direction, name, elmType} =
@@ -100,13 +108,14 @@ getPortsFromModule h knownPortModule acc = do
                 if T.null l' then pure . mconcat $ reverse acc'
                 else go (l' : acc')
 
-parsePort :: Text -> Port
+parsePort :: Text -> Response Text Port
 parsePort t =
   let w = drop 1 . words $ strip t
       identifier = mconcat $ take 1 w
       relevantTypeString = mconcat . intersperse " " $ drop 2 w
-      relevantType = fromMaybe (error "Could not parse type " <> relevantTypeString <> "in port definition") $
-        readNextExpression relevantTypeString
-      direction = if "->" `T.isInfixOf` relevantType then In else Out
-      elmType = elmTypeFromText $ T.takeWhile (/= '-') relevantType
-  in Port direction (PortName identifier) elmType
+  in case readNextExpression relevantTypeString of
+    Just relevantType ->
+      let direction = if "->" `T.isInfixOf` relevantType then In else Out
+          elmType = elmTypeFromText $ T.takeWhile (/= '-') relevantType
+      in pure $ Port direction (PortName identifier) elmType
+    Nothing -> Failed $ "Could not parse type " <> relevantTypeString <> " in port definition " <> t

@@ -7,6 +7,7 @@ import           Data.Text              (isSuffixOf)
 import           GHC.IO.Device          (IODeviceType (Directory, RegularFile))
 import           System.Directory       (listDirectory)
 import           System.Posix.Internals (fileType)
+import           TIE.Response           (Response (..))
 
 {-| Gets a list of FilePaths that end in ".elm" under the given directory.
 -}
@@ -23,9 +24,11 @@ getAllElmFilesIn (f, t) = case t of
     pure [elmFile | ".elm" `isSuffixOf` toText f, elmFile <- [f]]
   _ -> pure []
 
-getMainElmFile :: [FilePath] -> FilePath
-getMainElmFile paths = fromMaybe (error "Could not find a Main.elm in the directory given") .
-                        viaNonEmpty head $ filter (\path -> "Main.elm" `isSuffixOf` toText path) paths
+getMainElmFile :: [FilePath] -> Response Text FilePath
+getMainElmFile paths =
+  case viaNonEmpty head $ filter (\path -> "Main.elm" `isSuffixOf` toText path) paths of
+    Just mainPath -> pure mainPath
+    Nothing       -> Failed "Could not find a Main.elm in the directory given"
 
 
 fileTypeTuple :: FilePath -> IO (FilePath, IODeviceType)
