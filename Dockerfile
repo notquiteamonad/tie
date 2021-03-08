@@ -9,6 +9,9 @@ COPY package.yaml README.md stack.yaml stack.yaml.lock ./
 # Disable building with nix
 RUN sed -i '/^nix:/,$d' stack.yaml
 
+# Enable static building
+RUN sed -i '/^      - -with-rtsopts=-N$/a \ \ \ \ \ \ - -static\n\ \ \ \ \ \ - -optl-static\n\ \ \ \ \ \ - -optl-pthread' package.yaml
+
 # Install GHC
 RUN stack setup
 
