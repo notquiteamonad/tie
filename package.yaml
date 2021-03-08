@@ -32,11 +32,8 @@ executables:
     source-dirs: app
     ghc-options:
       - -O2
-      - -static
       - -threaded
       - -rtsopts
       - -with-rtsopts=-N
-      - -optl-static
-      - -optl-pthread
     dependencies:
       - tie

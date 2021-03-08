@@ -6,7 +6,8 @@ import           Data.Text      (replace, strip, stripPrefix)
 import qualified Data.Text      as T (drop, dropEnd, dropWhile, head, null,
                                       reverse, take, takeWhile)
 import           Data.Text.IO   (hGetLine)
-import           GHC.IO.Handle  (hIsEOF)
+import           GHC.IO.Handle  (hIsEOF, hSetEncoding)
+import           System.IO      (mkTextEncoding)
 import           TIE.Response   (Response (..))
 import           TIE.TypeScript (Exported (Exported), Interface (..),
                                  InterfaceName (InterfaceName),
@@ -57,24 +58,29 @@ findType paths nct@(NeededCustomType c) = do
 
 findRecordTypeInFile :: Handle -> Text -> Int -> [Text] -> IO (Maybe Text)
 findRecordTypeInFile h recordName nestingLevel acc = do
-  eof <- hIsEOF h
-  if eof then
-    if null acc then pure Nothing
-    else wrapUp acc
-  else do
-    l <- hGetLine h
-    if null acc then
-      if ["type", "alias", recordName] == (take 3 . words . strip) l then findRecordTypeInFile h recordName (nextNestingLevel l - 1) $ l : acc
-      else findRecordTypeInFile h recordName nestingLevel acc
-    else do
-      let nnl = nextNestingLevel l
-      if nnl < 0 then
-        wrapUp $ (T.reverse . T.dropWhile (/= '}') $ T.reverse l) : acc
-      else
-        findRecordTypeInFile h recordName nnl $ l : acc
-  where wrapUp = pure . pure . mconcat . intersperse "\n" . reverse
-        nextNestingLevel t = nestingLevel + length (filter (== '{') s) - length (filter (== '}') s)
-          where s = toString t
+  enc <- mkTextEncoding "UTF-8//IGNORE"
+  hSetEncoding h enc
+  go recordName nestingLevel acc
+    where
+      go recordName' nestingLevel' acc' = do
+        eof <- hIsEOF h
+        if eof then
+          if null acc' then pure Nothing
+          else wrapUp acc'
+        else do
+          l <- hGetLine h
+          if null acc' then
+            if ["type", "alias", recordName'] == (take 3 . words . strip) l then findRecordTypeInFile h recordName' (nextNestingLevel l - 1) $ l : acc'
+            else findRecordTypeInFile h recordName' nestingLevel' acc'
+          else do
+            let nnl = nextNestingLevel l
+            if nnl < 0 then
+              wrapUp $ (T.reverse . T.dropWhile (/= '}') $ T.reverse l) : acc'
+            else
+              findRecordTypeInFile h recordName' nnl $ l : acc'
+        where wrapUp = pure . pure . mconcat . intersperse "\n" . reverse
+              nextNestingLevel t = nestingLevel' + length (filter (== '{') s) - length (filter (== '}') s)
+                where s = toString t
 
 parseRecordType :: Text -> Text -> Interface
 parseRecordType name elmCode = Interface Exported (InterfaceName name) . recordMembers $ removeOneBraceLayer elmCode

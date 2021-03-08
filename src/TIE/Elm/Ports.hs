@@ -8,7 +8,8 @@ import           Data.Text          (strip)
 import qualified Data.Text          as T (isInfixOf, isPrefixOf, null,
                                           takeWhile)
 import           Data.Text.IO       (hGetLine)
-import           GHC.IO.Handle      (hIsEOF)
+import           GHC.IO.Handle      (hIsEOF, hSetEncoding)
+import           System.IO          (mkTextEncoding)
 import           TIE.Elm.Expression (readNextExpression)
 import           TIE.Elm.Types      (ElmType (..), NeededCustomType,
                                      elmTypeFromText, elmTypeToTSType)
@@ -72,41 +73,46 @@ callbackTypeFor t = TFunction [Argument (ArgumentName "data") $ elmTypeToTSType 
 
 getPortsFromModule :: Handle -> Bool -> [Text] -> IO [Text]
 getPortsFromModule h knownPortModule acc = do
-  eof <- hIsEOF h
-  if eof then pure acc
-  else do
-    l <- strip <$> hGetLine h
-    if not knownPortModule then do
-      case nonEmpty $ words l of
-        Just w ->
-          if head w == "module" then
-            -- Not a port module
-            pure []
-          else if last w == "port" then do
-            l' <- strip <$> hGetLine h
-            case nonEmpty $ words l' of
-              Just w' ->
-                if head w' == "module" then getPortsFromModule h True acc
-                else pure []
-              Nothing ->
+  enc <- mkTextEncoding "UTF-8//IGNORE"
+  hSetEncoding h enc
+  go acc
+  where
+    go acc' = do
+      eof <- hIsEOF h
+      if eof then pure acc'
+      else do
+        l <- strip <$> hGetLine h
+        if not knownPortModule then do
+          case nonEmpty $ words l of
+            Just w ->
+              if head w == "module" then
+                -- Not a port module
                 pure []
-          else if take 2 (toList w) == ["port", "module"] then getPortsFromModule h True acc
-          else getPortsFromModule h knownPortModule acc
-        Nothing ->
-          getPortsFromModule h knownPortModule acc
-    else
-      if "port" `T.isPrefixOf` l then do
-        next <- go [l]
-        getPortsFromModule h knownPortModule $ next : acc
-      else getPortsFromModule h knownPortModule acc
-      where go :: [Text] -> IO Text
-            go acc' = do
-              eof' <- hIsEOF h
-              if eof' then pure . mconcat $ reverse acc'
-              else do
+              else if last w == "port" then do
                 l' <- strip <$> hGetLine h
-                if T.null l' then pure . mconcat $ reverse acc'
-                else go (l' : acc')
+                case nonEmpty $ words l' of
+                  Just w' ->
+                    if head w' == "module" then getPortsFromModule h True acc'
+                    else pure []
+                  Nothing ->
+                    pure []
+              else if take 2 (toList w) == ["port", "module"] then getPortsFromModule h True acc'
+              else getPortsFromModule h knownPortModule acc'
+            Nothing ->
+              getPortsFromModule h knownPortModule acc'
+        else
+          if "port" `T.isPrefixOf` l then do
+            next <- go' [l]
+            getPortsFromModule h knownPortModule $ next : acc'
+          else getPortsFromModule h knownPortModule acc'
+          where go' :: [Text] -> IO Text
+                go' acc'' = do
+                  eof' <- hIsEOF h
+                  if eof' then pure . mconcat $ reverse acc''
+                  else do
+                    l' <- strip <$> hGetLine h
+                    if T.null l' then pure . mconcat $ reverse acc''
+                    else go' (l' : acc'')
 
 parsePort :: Text -> Response Text Port
 parsePort t =

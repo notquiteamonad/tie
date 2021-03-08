@@ -4,7 +4,8 @@ module TIE.Elm.Main (generateInitFunction) where
 
 import qualified Data.Text          as T (isPrefixOf, null, strip)
 import           Data.Text.IO       (hGetLine)
-import           GHC.IO.Handle      (hIsEOF)
+import           GHC.IO.Handle      (hIsEOF, hSetEncoding)
+import           System.IO          (mkTextEncoding)
 import           TIE.Elm.Expression (readNextExpression)
 import           TIE.Elm.Types      (ElmType (CustomType, ElmPrimitiveType),
                                      NeededCustomType, elmTypeFromText,
@@ -47,15 +48,20 @@ generateInitFunction mainPath = do
 
 buildMain :: Handle -> [Text] -> IO (Response Text Text)
 buildMain h acc = do
-  eof <- hIsEOF h
-  if eof then
-    if null acc then pure $ Failed "Could not find main."
-    else wrapUp acc
-  else do
-    l <- hGetLine h
-    if null acc then
-      if "main :" `T.isPrefixOf` T.strip l then buildMain h $ l : acc
-      else buildMain h acc
-    else if T.null (T.strip l) || "main =" `T.isPrefixOf` T.strip l then wrapUp acc
-    else buildMain h $ l : acc
-  where wrapUp = pure . pure . mconcat . intersperse "\n" . reverse
+  enc <- mkTextEncoding "UTF-8//IGNORE"
+  hSetEncoding h enc
+  go acc
+  where
+    go acc' = do
+      eof <- hIsEOF h
+      if eof then
+        if null acc' then pure $ Failed "Could not find main."
+        else wrapUp acc'
+      else do
+        l <- hGetLine h
+        if null acc' then
+          if "main :" `T.isPrefixOf` T.strip l then go $ l : acc'
+          else go acc'
+        else if T.null (T.strip l) || "main =" `T.isPrefixOf` T.strip l then wrapUp acc'
+        else go $ l : acc'
+      where wrapUp = pure . pure . mconcat . intersperse "\n" . reverse
