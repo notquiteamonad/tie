@@ -4,3 +4,6 @@
 # Obsidian files
 **/.obsidian/cache
 **/.obsidian/workspace
+
+# Built executable
+/build
