@@ -98,15 +98,19 @@ splitIntoMembers innerLevel acc buf t =
     let next = T.head t
         endOfMember nextLevel = splitIntoMembers nextLevel (buf : acc) "" $ T.drop 1 t
         endOfChar nextLevel = splitIntoMembers nextLevel acc (buf <> T.take 1 t) $ T.drop 1 t
+        skipToNextLevelChange nextLevel = splitIntoMembers nextLevel acc
+          (buf <> T.takeWhile notALevelChange t) $ T.dropWhile notALevelChange t
+          where notALevelChange c = c /= '{' && c /= '}'
     in
       if innerLevel == 0 && next == ',' then
         -- End of member, move on to next one
         endOfMember 0
       else if next == '{' then
         -- Going down a level
-        endOfChar (innerLevel + 1)
+        skipToNextLevelChange (innerLevel + 1)
       else if next == '}' then
         -- Going up a level
-        endOfChar (innerLevel - 1)
+        if innerLevel == 1 then endOfChar (innerLevel - 1)
+        else skipToNextLevelChange (innerLevel - 1)
       else
         endOfChar innerLevel
