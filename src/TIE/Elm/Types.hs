@@ -1,6 +1,13 @@
 {-# LANGUAGE BlockArguments #-}
 
-module TIE.Elm.Types (ElmType(ElmPrimitiveType, CustomType), NeededCustomType(NeededCustomType), elmTypeFromText, elmTypeToTSType, findType) where
+module TIE.Elm.Types
+  (ElmType(..)
+  , NeededCustomType(..)
+  , elmTypeFromText
+  , elmTypeToTSType
+  , findType
+  , getCustomTypes
+  ) where
 
 import           Data.Text      (replace, strip, stripPrefix)
 import qualified Data.Text      as T (drop, dropEnd, dropWhile, head, null,
@@ -14,12 +21,22 @@ import           TIE.TypeScript (Exported (Exported), Interface (..),
                                  Member (MProperty, MPropertyGroup), Members,
                                  PrimitiveName (PBoolean, PNull, PNumber, PString, PUnknown),
                                  PropertyName (PropertyName),
-                                 TSType (TInterface, TPrimitive))
+                                 TSType (TArray, TInterface, TPrimitive))
 
 data ElmType
   = ElmPrimitiveType TSType
   | CustomType TSType NeededCustomType
+  | ElmArrayType ElmType
+  | ETUnion ElmType ElmType
   deriving (Eq, Show)
+
+instance Semigroup ElmType where
+  lhs@(ElmPrimitiveType (TPrimitive PNull) `ETUnion` _) <> ElmPrimitiveType (TPrimitive PNull) = lhs
+  lhs@(_ `ETUnion` ElmPrimitiveType (TPrimitive PNull)) <> ElmPrimitiveType (TPrimitive PNull) = lhs
+  ElmPrimitiveType (TPrimitive PNull) <> rhs@(ElmPrimitiveType (TPrimitive PNull) `ETUnion` _) = rhs
+  ElmPrimitiveType (TPrimitive PNull) <> rhs@(_ `ETUnion` ElmPrimitiveType (TPrimitive PNull)) = rhs
+  ElmPrimitiveType (TPrimitive PNull) <> rhs = rhs `ETUnion` ElmPrimitiveType (TPrimitive PNull)
+  a <> b = a `ETUnion` b
 
 newtype NeededCustomType = NeededCustomType Text deriving (Eq, Ord, Show)
 
@@ -38,12 +55,32 @@ elmTypeFromText t = case strip t of
       Just mValue -> case elmTypeFromText mValue of
         ElmPrimitiveType p -> ElmPrimitiveType $ p <> TPrimitive PNull
         CustomType c nct   -> CustomType (c <> TPrimitive PNull) nct
-      Nothing     -> CustomType (TInterface (InterfaceName qualifiedName)) $ NeededCustomType qualifiedName
-                      where qualifiedName = "Elm.Main." <> strip t
+        ElmArrayType a -> ElmArrayType a <> ElmPrimitiveType (TPrimitive PNull)
+        t1 `ETUnion ` t2 -> t1 <> t2 <> ElmPrimitiveType (TPrimitive PNull)
+      Nothing ->
+        case stripPrefix "List " (strip t) of
+          Just lValue -> handleListValue lValue
+          Nothing ->
+            case stripPrefix "Array " (strip t) of
+              Just aValue -> handleListValue aValue
+              Nothing     -> CustomType (TInterface (InterfaceName qualifiedName)) $ NeededCustomType qualifiedName
+                              where qualifiedName = "Elm.Main." <> strip t
+          where handleListValue v = ElmArrayType $ elmTypeFromText v
 
 elmTypeToTSType :: ElmType -> TSType
 elmTypeToTSType (ElmPrimitiveType t) = t
 elmTypeToTSType (CustomType t _)     = t
+elmTypeToTSType (ElmArrayType t)     = TArray $ elmTypeToTSType t
+elmTypeToTSType (t `ETUnion` u)      = elmTypeToTSType t <> elmTypeToTSType u
+
+getCustomTypes :: [ElmType] -> [NeededCustomType] -> [NeededCustomType]
+getCustomTypes [] acc = acc
+getCustomTypes (t:ts) acc =
+  case t of
+    ElmPrimitiveType _ -> getCustomTypes ts acc
+    CustomType _ nct   -> getCustomTypes ts $ nct : acc
+    ElmArrayType a     -> getCustomTypes (a : ts) acc
+    t1 `ETUnion` t2    -> getCustomTypes (t1 : t2 : ts) acc
 
 findType :: [FilePath] -> NeededCustomType -> IO (Response Text Interface)
 findType paths nct@(NeededCustomType c) = do

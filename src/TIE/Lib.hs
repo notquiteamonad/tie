@@ -32,11 +32,9 @@ interoperate dirname = do
   elmFiles <- getAllElmFilesIn (dirname, Directory)
   case getMainElmFile elmFiles of
     Ok mainFile -> generateInitFunction mainFile >>= \case
-      Ok (initFunction, neededCustomFlagType) -> generatePortProperties elmFiles >>= \case
+      Ok (initFunction, neededCustomFlagTypes) -> generatePortProperties elmFiles >>= \case
           Ok (portProperties, neededCustomPortTypes) -> do
-            let neededCustomTypes = sortNub $ case neededCustomFlagType of
-                  Just ncft -> ncft : neededCustomPortTypes
-                  Nothing   -> neededCustomPortTypes
+            let neededCustomTypes = sortNub $ neededCustomFlagTypes <> neededCustomPortTypes
             additionalInterfaceResponses <- forM neededCustomTypes (findType elmFiles)
             let additionalInterfaces = catSuccessess additionalInterfaceResponses
             if length additionalInterfaces == length additionalInterfaceResponses then do

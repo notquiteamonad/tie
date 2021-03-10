@@ -7,9 +7,9 @@ import           Data.Text.IO       (hGetLine)
 import           GHC.IO.Handle      (hIsEOF, hSetEncoding)
 import           System.IO          (mkTextEncoding)
 import           TIE.Elm.Expression (readNextExpression)
-import           TIE.Elm.Types      (ElmType (CustomType, ElmPrimitiveType),
+import           TIE.Elm.Types      (ElmType (ElmPrimitiveType),
                                      NeededCustomType, elmTypeFromText,
-                                     elmTypeToTSType)
+                                     elmTypeToTSType, getCustomTypes)
 import           TIE.Response       (Response (..))
 import           TIE.TypeScript     (Argument (Argument),
                                      ArgumentName (ArgumentName),
@@ -22,7 +22,7 @@ import           TIE.TypeScript     (Argument (Argument),
                                      PropertyName (PropertyName),
                                      TSType (TInlineInterface, TInterface, TPrimitive))
 
-generateInitFunction :: FilePath -> IO (Response Text (NamespaceMember, Maybe NeededCustomType))
+generateInitFunction :: FilePath -> IO (Response Text (NamespaceMember, [NeededCustomType]))
 generateInitFunction mainPath = do
   putStrLn $ "Reading main from " <> mainPath
   withFile mainPath ReadMode (`buildMain` []) >>= \case
@@ -39,9 +39,7 @@ generateInitFunction mainPath = do
                       elmType                  -> [MProperty (PropertyName "flags") $ elmTypeToTSType elmType]
                 ]
                 (TInterface $ InterfaceName "Elm.Main.App")
-            , case flags of
-                CustomType _ c -> pure c
-                _              -> Nothing
+            , getCustomTypes [flags] []
             )
         Nothing -> pure $ Failed "Could not read flags type from main definition"
     Failed e -> pure $ Failed e
