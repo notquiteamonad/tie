@@ -12,7 +12,8 @@ import           GHC.IO.Handle      (hIsEOF, hSetEncoding)
 import           System.IO          (mkTextEncoding)
 import           TIE.Elm.Expression (readNextExpression)
 import           TIE.Elm.Types      (ElmType (..), NeededCustomType,
-                                     elmTypeFromText, elmTypeToTSType)
+                                     elmTypeFromText, elmTypeToTSType,
+                                     getCustomTypes)
 import           TIE.Response       (Response (..), catFailures, catSuccessess)
 import           TIE.TypeScript     (Argument (Argument),
                                      ArgumentName (ArgumentName),
@@ -38,7 +39,7 @@ generatePortProperties paths = getPortsFromPaths paths >>= \case
   Ok ports ->
     pure $ pure
       ( toMember <$> ports
-      , getCustomTypes ports []
+      , getCustomTypes (elmType <$> ports) []
       )
   Failed e -> pure $ Failed e
 
@@ -60,13 +61,6 @@ toMember Port {direction, name, elmType} =
         Out -> [ Argument (ArgumentName "callback") $ callbackTypeFor elmType ]
   in
   MPropertyGroup (PropertyName $ unPortName name) [ MFunction . Function functionName args $ TPrimitive PVoid ]
-
-getCustomTypes :: [Port] -> [NeededCustomType] -> [NeededCustomType]
-getCustomTypes [] acc = acc
-getCustomTypes (Port {elmType}:ps) acc =
-  case elmType of
-    CustomType _ nct -> getCustomTypes ps $ nct : acc
-    _                -> getCustomTypes ps acc
 
 callbackTypeFor :: ElmType -> TSType
 callbackTypeFor t = TFunction [Argument (ArgumentName "data") $ elmTypeToTSType t] $ TPrimitive PVoid

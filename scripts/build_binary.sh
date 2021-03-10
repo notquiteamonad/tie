@@ -4,8 +4,10 @@ function cleanUp {
   docker rm -f tie-temp &>/dev/null
 }
 
+projectDir=$(git rev-parse --show-toplevel)
+
 # Build the executable in a docker image
-docker build $(git rev-parse --show-toplevel) -t tie:latest
+docker build $projectDir -t tie:latest
 
 trap cleanUp INT EXIT
 
@@ -13,5 +15,5 @@ trap cleanUp INT EXIT
 docker create -it --name tie-temp tie:latest sh
 
 # Copy the executable from the container
-mkdir -p build
-docker cp tie-temp:/root/.local/bin/tie-exe build/tie
+mkdir -p $projectDir/build
+docker cp tie-temp:/root/.local/bin/tie-exe $projectDir/build/tie

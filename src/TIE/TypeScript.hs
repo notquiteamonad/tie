@@ -1,20 +1,20 @@
 module TIE.TypeScript
-  ( Argument (Argument)
-  , ArgumentName (ArgumentName)
-  , Document (Document)
-  , Exported (Exported, Private)
-  , Function (Function)
-  , FunctionName (FunctionName)
-  , Interface (Interface)
-  , InterfaceName (InterfaceName)
+  ( Argument (..)
+  , ArgumentName (..)
+  , Document (..)
+  , Exported (..)
+  , Function (..)
+  , FunctionName (..)
+  , Interface (..)
+  , InterfaceName (..)
   , Members
-  , Member (MFunction, MProperty, MPropertyGroup)
-  , Namespace (Namespace)
-  , NamespaceMember (NMFunction, NMInterface, NMNamespace)
-  , NamespaceName (NamespaceName)
-  , PrimitiveName (PString, PNumber, PBoolean, PUnknown, PNull, PVoid)
-  , PropertyName (PropertyName)
-  , TSType (TInterface, TInlineInterface, TFunction, TPrimitive)
+  , Member (..)
+  , Namespace (..)
+  , NamespaceMember (..)
+  , NamespaceName (..)
+  , PrimitiveName (..)
+  , PropertyName (..)
+  , TSType (..)
   , writeDocument
   ) where
 
@@ -78,6 +78,7 @@ data TSType
   | TInlineInterface Members
   | TFunction Arguments ReturnType
   | TPrimitive PrimitiveName
+  | TArray TSType
   | TUnion TSType TSType
   deriving (Eq, Show)
 
@@ -165,6 +166,7 @@ writeTSType (TInterface (InterfaceName i)) = i
 writeTSType (TInlineInterface members) = writeInlineInterface members
 writeTSType (TFunction args returnType)                 = writeAnonymousFunctionType args returnType
 writeTSType (TPrimitive p)                 = writePrimitiveType p
+writeTSType (TArray t)                 = writeTSType t <> "[]"
 writeTSType (a `TUnion` b) = writeTSType a <> " | " <> writeTSType b
 
 writeInlineInterface :: Members -> Text
