@@ -24,6 +24,7 @@ library
   exposed-modules:
       Prelude
       TIE.Elm.Expression
+      TIE.Elm.Internal.Expression
       TIE.Elm.Main
       TIE.Elm.Ports
       TIE.Elm.Types
@@ -68,6 +69,8 @@ test-suite tie-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      TIE.Elm.ExpressionSpec
+      TIE.Elm.Internal.ExpressionSpec
       TIE.ResponseSpec
       TIE.TypeScriptSpec
       Paths_tie
