@@ -37,3 +37,11 @@ executables:
       - -with-rtsopts=-N
     dependencies:
       - tie
+
+tests:
+  tie-test:
+    main: Spec.hs
+    source-dirs: test
+    dependencies:
+      - tie
+      - hspec >= 2.7.6 && < 2.8
