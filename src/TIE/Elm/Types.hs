@@ -19,9 +19,11 @@ import           TIE.Response   (Response (..))
 import           TIE.TypeScript (Exported (Exported), Interface (..),
                                  InterfaceName (InterfaceName),
                                  Member (MProperty, MPropertyGroup), Members,
-                                 PrimitiveName (PBoolean, PNull, PNumber, PString, PUnknown),
+                                 PrimitiveName (PBoolean, PNull, PNumber, PString, PUnknown, PVoid),
                                  PropertyName (PropertyName),
                                  TSType (TArray, TInterface, TPrimitive))
+
+newtype NeededCustomType = NeededCustomType Text deriving (Eq, Ord, Show)
 
 data ElmType
   = ElmPrimitiveType TSType
@@ -31,14 +33,8 @@ data ElmType
   deriving (Eq, Show)
 
 instance Semigroup ElmType where
-  lhs@(ElmPrimitiveType (TPrimitive PNull) `ETUnion` _) <> ElmPrimitiveType (TPrimitive PNull) = lhs
-  lhs@(_ `ETUnion` ElmPrimitiveType (TPrimitive PNull)) <> ElmPrimitiveType (TPrimitive PNull) = lhs
-  ElmPrimitiveType (TPrimitive PNull) <> rhs@(ElmPrimitiveType (TPrimitive PNull) `ETUnion` _) = rhs
-  ElmPrimitiveType (TPrimitive PNull) <> rhs@(_ `ETUnion` ElmPrimitiveType (TPrimitive PNull)) = rhs
-  ElmPrimitiveType (TPrimitive PNull) <> rhs = rhs `ETUnion` ElmPrimitiveType (TPrimitive PNull)
-  a <> b = a `ETUnion` b
-
-newtype NeededCustomType = NeededCustomType Text deriving (Eq, Ord, Show)
+  ElmPrimitiveType a <> ElmPrimitiveType b = ElmPrimitiveType $ a <> b
+  a <> b                                   = a `ETUnion` b
 
 elmTypeFromText :: Text -> ElmType
 elmTypeFromText t = case strip t of
@@ -53,10 +49,10 @@ elmTypeFromText t = case strip t of
   _                   ->
     case stripPrefix "Maybe " (strip t) of
       Just mValue -> case elmTypeFromText mValue of
-        ElmPrimitiveType p -> ElmPrimitiveType $ p <> TPrimitive PNull
-        CustomType c nct   -> CustomType (c <> TPrimitive PNull) nct
-        ElmArrayType a -> ElmArrayType a <> ElmPrimitiveType (TPrimitive PNull)
-        t1 `ETUnion ` t2 -> t1 <> t2 <> ElmPrimitiveType (TPrimitive PNull)
+        ElmPrimitiveType p -> ElmPrimitiveType $ p <> TPrimitive PVoid <> TPrimitive PNull
+        CustomType c nct   -> CustomType (c <> TPrimitive PVoid <> TPrimitive PNull) nct
+        ElmArrayType a -> ElmArrayType a <> ElmPrimitiveType (TPrimitive PVoid <> TPrimitive PNull)
+        t1 `ETUnion ` t2 -> t1 <> t2 <> ElmPrimitiveType (TPrimitive PVoid <> TPrimitive PNull)
       Nothing ->
         case stripPrefix "List " (strip t) of
           Just lValue -> handleListValue lValue

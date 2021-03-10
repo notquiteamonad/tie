@@ -45,12 +45,12 @@ if [[ $(echo $incorrectlyFormattedFileLines | wc -w) -gt 0 ]]; then
   for file in $(echo "$incorrectlyFormattedFileLines" | awk '{print $NF}'); do
     echo "  $file"
   done
-  echo -e "Run \"\e[1mstylish-haskell -ir app src\e[0m\" to format them."
+  echo -e "Run \"\e[1mstylish-haskell -ir app src test\e[0m\" to format them."
   exit_gracefully 1
 fi
 
 # Run the linter
-hlint app src
+hlint app src test
 if [[ $? -ne 0 ]]; then
   echo -e "\e[31mLinting failed - fix the above issues and try again.\e[0m"
   exit_gracefully 1

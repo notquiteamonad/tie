@@ -1,14 +1,26 @@
 module TIE.TypeScriptSpec (spec) where
 
-import           TIE.TypeScript
-import           Test.Hspec
+import           TIE.TypeScript (Argument (Argument),
+                                 ArgumentName (ArgumentName), Document (..),
+                                 Exported (Exported, Private),
+                                 Function (Function),
+                                 FunctionName (FunctionName),
+                                 Interface (Interface),
+                                 InterfaceName (InterfaceName),
+                                 Member (MFunction, MProperty, MPropertyGroup),
+                                 Namespace (Namespace),
+                                 NamespaceMember (NMFunction, NMInterface, NMNamespace),
+                                 NamespaceName (NamespaceName),
+                                 PrimitiveName (PBoolean, PNull, PNumber, PString, PUnknown, PVoid),
+                                 PropertyName (PropertyName),
+                                 TSType (TArray, TFunction, TInlineInterface, TInterface, TPrimitive),
+                                 writeDocument)
+import           Test.Hspec     (Spec, it, shouldBe)
 
 spec :: Spec
 spec =
-  describe "The TypeScript Module" do
-      it "correctly formats a document" do
-        putTextLn $ writeDocument testDocument
-        lines (writeDocument testDocument) `shouldBe` testDocumentOutput
+  it "correctly formats a document" do
+    lines (writeDocument testDocument) `shouldBe` testDocumentOutput
 
 testDocument :: Document
 testDocument = Document
@@ -26,8 +38,16 @@ testDocument = Document
                     , Argument (ArgumentName "baz") $ TPrimitive PUnknown
                     , Argument (ArgumentName "additionalData") $
                         TInlineInterface [MProperty (PropertyName "isGoodData") $ TPrimitive PBoolean]
-                        <> TPrimitive PNull
                         <> TPrimitive PString
+                        <> TPrimitive PNull
+                    ]
+                    (TPrimitive PVoid)
+              , MFunction $
+                  Function
+                    (FunctionName "hof")
+                    [ Argument (ArgumentName "f") $ TFunction
+                        [ Argument ( ArgumentName "s" ) $ TPrimitive PNull <> TPrimitive PVoid <> TPrimitive PNull ]
+                        ((TPrimitive PNull <> TPrimitive PNull) <> (TPrimitive PNull <> TPrimitive PNull))
                     ]
                     (TPrimitive PVoid)
               ]
@@ -52,6 +72,7 @@ testDocumentOutput =
   , "      };"
   , "      pInterface: Some.Package.Interface;"
   , "      foo(bar: (string[] | number[])[], baz: unknown, additionalData: { isGoodData: boolean } | string | null): void;"
+  , "      hof(f: (s: void | null) => null): void;"
   , "    };"
   , "  }"
   , "  interface NSInterface2 {"
