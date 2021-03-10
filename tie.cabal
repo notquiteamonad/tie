@@ -68,11 +68,13 @@ test-suite tie-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      TIE.TypeScriptSpec
       Paths_tie
   hs-source-dirs:
       test
   default-extensions:
       OverloadedStrings
+      BlockArguments
   ghc-options: -Wall
   build-depends:
       base-noprelude >=4.7 && <5

@@ -54,8 +54,8 @@ interoperate dirname = do
 
 buildDocument :: NamespaceMember -> [Interface] -> Members -> Document
 buildDocument initFunction additionalInterfaces ports = Document
-  [ Namespace Exported (NamespaceName "Elm")
-      [ NMNamespace . Namespace Private (NamespaceName "Main") $
+  [ Namespace (NamespaceName "Elm")
+      [ NMNamespace Private . Namespace (NamespaceName "Main") $
         [ NMInterface $ Interface Exported (InterfaceName "App")
           [ MPropertyGroup (PropertyName "ports") ports ]
         , initFunction

@@ -23,14 +23,15 @@ import           Data.Text (replace)
 newtype Document = Document [Namespace] deriving (Eq, Show)
 
 writeDocument :: Document -> Text
-writeDocument (Document xs) = replace "; }" " }" (onePerLine (Indented 0) writeNamespace xs) <> "\n"
+writeDocument (Document xs) = replace "; }" " }" (onePerLine (Indented 0) (\i n -> "export " <> writeNamespace i n) xs) <> "\n"
 
 data Indentation
   = Indented Int
   | Inline
 
 onePerLine :: Indentation -> (Indentation -> a -> Text) -> [a] -> Text
-onePerLine i@(Indented indentation) write xs = renderedIndentation <> (mconcat . intersperse ("\n" <> renderedIndentation) $ fmap (write i) xs)
+onePerLine _ _ [] = ""
+onePerLine i@(Indented indentation) write xs = renderedIndentation <> (mconcat . intersperse ("\n" <> renderedIndentation) $ fmap (write i) xs) <> "\n"
   where renderedIndentation = toText (replicate indentation ' ')
 onePerLine Inline _ _ = error "Internal: onePerLine cannot be called inline"
 
@@ -38,7 +39,7 @@ nextIndentation :: Indentation -> Indentation
 nextIndentation (Indented indentation) = Indented $ indentation + 2
 nextIndentation Inline                 = Inline
 
-data Namespace = Namespace Exported NamespaceName NamespaceMembers
+data Namespace = Namespace NamespaceName NamespaceMembers
   deriving (Eq, Show)
 
 data Exported = Exported | Private
@@ -47,7 +48,7 @@ data Exported = Exported | Private
 type NamespaceMembers = [NamespaceMember]
 
 data NamespaceMember
-  = NMNamespace Namespace
+  = NMNamespace Exported Namespace
   | NMInterface Interface
   | NMFunction Exported Function
   deriving (Eq, Show)
@@ -110,9 +111,8 @@ newtype FunctionName = FunctionName Text deriving (Eq, Show)
 newtype ArgumentName = ArgumentName Text deriving (Eq, Show)
 
 writeNamespace :: Indentation -> Namespace -> Text
-writeNamespace indentation (Namespace exported (NamespaceName name) members) =
-  writeExported exported
-  <> "namespace "
+writeNamespace indentation (Namespace (NamespaceName name) members) =
+  "namespace "
   <> name
   <> writeOpeningBrace indentation
   <> onePerLine (nextIndentation indentation) writeNamespaceMember members
@@ -127,11 +127,11 @@ writeOpeningBrace (Indented _) = " {\n"
 writeOpeningBrace Inline       = "{ "
 
 writeClosingBrace :: Indentation -> Text
-writeClosingBrace (Indented indentation) =  "\n" <> toText (replicate indentation ' ') <> "}"
+writeClosingBrace (Indented indentation) =  toText (replicate indentation ' ') <> "}"
 writeClosingBrace Inline =  " }"
 
 writeNamespaceMember :: Indentation -> NamespaceMember -> Text
-writeNamespaceMember indentation (NMNamespace n) = writeNamespace indentation n
+writeNamespaceMember indentation (NMNamespace exported n) = writeExported exported <> writeNamespace indentation n
 writeNamespaceMember indentation (NMInterface i) = writeInterface indentation i
 writeNamespaceMember _ (NMFunction exported f)  = writeExported exported <> "function " <> writeFunction f
 
@@ -166,6 +166,7 @@ writeTSType (TInterface (InterfaceName i)) = i
 writeTSType (TInlineInterface members) = writeInlineInterface members
 writeTSType (TFunction args returnType)                 = writeAnonymousFunctionType args returnType
 writeTSType (TPrimitive p)                 = writePrimitiveType p
+writeTSType (TArray (t1 `TUnion` t2))                 = "(" <> writeTSType t1 <> "[] | " <> writeTSType t2 <> "[])"
 writeTSType (TArray t)                 = writeTSType t <> "[]"
 writeTSType (a `TUnion` b) = writeTSType a <> " | " <> writeTSType b
 

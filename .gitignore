@@ -7,3 +7,6 @@
 
 # Built executable
 /build
+
+# HSpec Failures
+/.hspec-failures
