@@ -68,6 +68,7 @@ test-suite tie-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      TIE.ResponseSpec
       TIE.TypeScriptSpec
       Paths_tie
   hs-source-dirs:
