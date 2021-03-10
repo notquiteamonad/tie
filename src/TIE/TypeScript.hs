@@ -84,11 +84,15 @@ data TSType
   deriving (Eq, Show)
 
 instance Semigroup TSType where
-  lhs@(TPrimitive PNull `TUnion` _) <> TPrimitive PNull = lhs
-  lhs@(_ `TUnion` TPrimitive PNull) <> TPrimitive PNull = lhs
-  TPrimitive PNull <> rhs@(TPrimitive PNull `TUnion` _) = rhs
-  TPrimitive PNull <> rhs@(_ `TUnion` TPrimitive PNull) = rhs
-  TPrimitive PNull <> rhs = rhs `TUnion` TPrimitive PNull
+  lhs@(a@(TPrimitive _) `TUnion` b@(TPrimitive _)) <> rhs
+    | a == rhs || b == rhs = lhs
+    | otherwise = lhs `TUnion` rhs
+  lhs <> rhs@(a@(TPrimitive _) `TUnion` b@(TPrimitive _))
+    | a == lhs || b == lhs = rhs
+    | otherwise = lhs `TUnion` rhs
+  lhs@(TPrimitive a) <> rhs@(TPrimitive b)
+    | a == b = lhs
+    | otherwise = lhs `TUnion` rhs
   a <> b = a `TUnion` b
 
 data PrimitiveName
