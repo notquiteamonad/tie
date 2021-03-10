@@ -8,3 +8,6 @@ cradle:
 
     - path: "./app/Paths_tie.hs"
       component: "tie:exe:tie-exe"
+
+    - path: "./test"
+      component: "tie:test:tie-test"

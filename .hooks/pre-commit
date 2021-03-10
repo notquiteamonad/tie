@@ -56,4 +56,10 @@ if [[ $? -ne 0 ]]; then
   exit_gracefully 1
 fi
 
+stack test
+if [[ $? -ne 0 ]]; then
+  echo -e "\e[31mThere were test failures - fix the above issues and try again.\e[0m"
+  exit_gracefully 1
+fi
+
 exit_gracefully 0
