@@ -31,6 +31,7 @@ elmTypeFromText t = case strip t of
   "Bool"              -> ElmPrimitiveType $ TPrimitive PBoolean
   "Json.Decode.Value" -> ElmPrimitiveType $ TPrimitive PUnknown
   "Json.Encode.Value" -> ElmPrimitiveType $ TPrimitive PUnknown
+  "Value" -> ElmPrimitiveType $ TPrimitive PUnknown
   "()"                -> ElmPrimitiveType $ TPrimitive PNull
   _                   ->
     case stripPrefix "Maybe " (strip t) of
