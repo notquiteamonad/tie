@@ -4,9 +4,8 @@
 
 module TIE.Elm.Ports (generatePortProperties) where
 
-import           Data.Text          (strip)
-import qualified Data.Text          as T (isInfixOf, isPrefixOf, null,
-                                          takeWhile)
+import qualified Data.Text          as T (dropEnd, dropWhileEnd, isInfixOf,
+                                          isPrefixOf, null, strip, takeWhile)
 import           Data.Text.IO       (hGetLine)
 import           GHC.IO.Handle      (hIsEOF, hSetEncoding)
 import           System.IO          (mkTextEncoding)
@@ -14,7 +13,7 @@ import           TIE.Elm.Expression (readNextExpression)
 import           TIE.Elm.Types      (ElmType (..), NeededCustomType,
                                      elmTypeFromText, elmTypeToTSType,
                                      getCustomTypes)
-import           TIE.Response       (Response (..), catFailures, catSuccesses)
+import           TIE.Response       (Response (..), catResponses)
 import           TIE.TypeScript     (Argument (Argument),
                                      ArgumentName (ArgumentName),
                                      Function (Function),
@@ -46,12 +45,7 @@ generatePortProperties paths = getPortsFromPaths paths >>= \case
 getPortsFromPaths :: [FilePath] -> IO (Response Text [Port])
 getPortsFromPaths paths = do
   portBodies <- concat <$> forM paths \path -> withFile path ReadMode \h -> getPortsFromModule h False []
-  let portResponses = parsePort <$> portBodies
-  let successes = catSuccesses portResponses
-  if length successes == length portResponses then
-    pure $ Ok successes
-  else
-    pure . Failed . mconcat . intersperse "\n" $ catFailures portResponses
+  pure . catResponses $ parsePort <$> portBodies
 
 toMember :: Port -> Member
 toMember Port {direction, name, elmType} =
@@ -75,7 +69,7 @@ getPortsFromModule h knownPortModule acc = do
       eof <- hIsEOF h
       if eof then pure acc'
       else do
-        l <- strip <$> hGetLine h
+        l <- hGetLine h
         if not knownPortModule then do
           case nonEmpty $ words l of
             Just w ->
@@ -83,7 +77,7 @@ getPortsFromModule h knownPortModule acc = do
                 -- Not a port module
                 pure []
               else if last w == "port" then do
-                l' <- strip <$> hGetLine h
+                l' <- hGetLine h
                 case nonEmpty $ words l' of
                   Just w' ->
                     if head w' == "module" then getPortsFromModule h True acc'
@@ -104,18 +98,22 @@ getPortsFromModule h knownPortModule acc = do
                   eof' <- hIsEOF h
                   if eof' then pure . mconcat $ reverse acc''
                   else do
-                    l' <- strip <$> hGetLine h
+                    l' <- hGetLine h
                     if T.null l' then pure . mconcat $ reverse acc''
                     else go' (l' : acc'')
 
 parsePort :: Text -> Response Text Port
 parsePort t =
-  let w = drop 1 . words $ strip t
+  let w = drop 1 . words $ T.strip t
       identifier = mconcat $ take 1 w
       relevantTypeString = mconcat . intersperse " " $ drop 2 w
-  in case readNextExpression relevantTypeString of
-    Just relevantType ->
-      let direction = if "->" `T.isInfixOf` relevantType then In else Out
-          elmType = elmTypeFromText $ T.takeWhile (/= '-') relevantType
-      in Port direction (PortName identifier) <$> elmType
-    Nothing -> Failed $ "Could not parse type " <> relevantTypeString <> " in port definition " <> t
+  in
+    if T.null $ T.strip identifier then
+      Failed $ "Could not parse incomplete port definition: " <> t
+    else
+      case readNextExpression $ "(" <> T.dropEnd 1 (T.dropWhileEnd (/= '-') relevantTypeString) <> ")" of
+        Just relevantType ->
+          let direction = if "->" `T.isInfixOf` relevantType then In else Out
+              elmType = elmTypeFromText $ T.takeWhile (/= '-') relevantType
+          in Port direction (PortName identifier) <$> elmType
+        Nothing -> Failed $ "Could not parse type " <> relevantTypeString <> " in port definition " <> t
