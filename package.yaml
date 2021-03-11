@@ -45,5 +45,7 @@ tests:
     default-extensions:
       - BlockArguments
     dependencies:
-      - tie
+      - filepath >= 1.4.2 && < 1.5
       - hspec >= 2.7.6 && < 2.8
+      - template-haskell >= 2.16.0 && < 2.17
+      - tie

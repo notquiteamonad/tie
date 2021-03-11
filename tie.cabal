@@ -84,9 +84,11 @@ test-suite tie-test
   build-depends:
       base-noprelude >=4.7 && <5
     , directory >=1.3.6 && <1.4
+    , filepath >=1.4.2 && <1.5
     , fsnotify >=0.3.0 && <0.4
     , hspec >=2.7.6 && <2.8
     , relude >=0.7.0 && <0.8
+    , template-haskell >=2.16.0 && <2.17
     , text >=1.2.4 && <1.3
     , tie
   default-language: Haskell2010

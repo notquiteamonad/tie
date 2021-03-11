@@ -1,15 +1,30 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module TIE.Elm.TypesSpec (spec) where
 
 import qualified Data.Text             as T
+import           Language.Haskell.TH   (listE, litE, runIO, stringL)
+import           System.Directory      (getCurrentDirectory)
+import           System.FilePath       ((</>))
 import           TIE.Elm.Types         (ElmType (CustomType, ElmArrayType, ElmPrimitiveType),
                                         NeededCustomType (NeededCustomType),
-                                        elmTypeFromText)
+                                        elmTypeFromText, findType)
 import           TIE.Response          (Response (Failed, Ok))
-import           TIE.TypeScript        (InterfaceName (InterfaceName),
+import           TIE.TypeScript        (Exported (Exported),
+                                        Interface (Interface),
+                                        InterfaceName (InterfaceName),
+                                        Member (MProperty),
                                         PrimitiveName (PBoolean, PNull, PNumber, PString, PUnknown, PVoid),
+                                        PropertyName (PropertyName),
                                         TSType (TInterface, TPrimitive))
 import           Test.Hspec            (Spec, describe, it, shouldBe)
 import           Test.Hspec.QuickCheck (prop)
+
+testFilePaths :: [FilePath]
+-- testFilePaths = undefined
+testFilePaths = $(runIO getCurrentDirectory >>= \dir -> listE $
+                    (\p -> litE . stringL $ dir </> "test" </> "test-data" </> p)
+                    <$> [ "TestA.elm", "TestB.elm" ])
 
 spec :: Spec
 spec = do
@@ -90,3 +105,22 @@ spec = do
            )
     it "returns a Failed response for an invalid expression" do
       elmTypeFromText "Maybe (()" `shouldBe` Failed "Could not parse type Maybe (()"
+  describe "findType" do
+    it "can find a simple record type" do
+      foo <- findType testFilePaths (NeededCustomType "Foo")
+      foo `shouldBe` Ok
+        (Interface Exported (InterfaceName "Foo")
+          [ MProperty (PropertyName "username") (TPrimitive PString)
+          , MProperty (PropertyName "email") (TPrimitive PString)
+          ]
+        )
+    it "can find a strangely-formatted complex record type" do
+      foo <- findType testFilePaths (NeededCustomType "Bar")
+      foo `shouldBe` Ok
+        (Interface Exported (InterfaceName "Bar")
+          [ MProperty (PropertyName "userId") (TPrimitive PNumber)
+          , MProperty (PropertyName "username") (TPrimitive PString)
+          , MProperty (PropertyName "email") (TPrimitive PString <> TPrimitive PVoid <> TPrimitive PNull)
+          , MProperty (PropertyName "bar") (TInterface (InterfaceName "Elm.Main.Bar"))
+          ]
+        )

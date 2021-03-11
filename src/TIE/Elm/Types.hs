@@ -140,7 +140,7 @@ recordMembers t = catResponses $ recordMember <$> splitIntoMembers 0 [] "" t
 
 recordMember :: Text -> Response Text Member
 recordMember m =
-  let identifier = T.takeWhile (/= ':') m
+  let identifier = strip $ T.takeWhile (/= ':') m
       rest = T.drop 1 $ T.dropWhile (/= ':') m
   in case removeOneBraceLayer m of
         "" -> MProperty (PropertyName identifier) . elmTypeToTSType <$> elmTypeFromText rest
