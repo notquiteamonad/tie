@@ -15,12 +15,12 @@ import           TIE.TypeScript     (Argument (Argument),
                                      ArgumentName (ArgumentName),
                                      Exported (Exported), Function (Function),
                                      FunctionName (FunctionName),
-                                     InterfaceName (InterfaceName),
                                      Member (MProperty),
                                      NamespaceMember (NMFunction),
-                                     PrimitiveName (PNull),
+                                     PrimitiveName (PNull, PVoid),
                                      PropertyName (PropertyName),
-                                     TSType (TInlineInterface, TInterface, TPrimitive))
+                                     ReferenceName (ReferenceName),
+                                     TSType (TInlineInterface, TPrimitive, TReference))
 
 generateInitFunction :: FilePath -> IO (Response Text (NamespaceMember, [NeededCustomType]))
 generateInitFunction mainPath = do
@@ -33,14 +33,16 @@ generateInitFunction mainPath = do
             Ok flags -> pure $ pure
               ( NMFunction Exported $ Function (FunctionName "init")
                   [ Argument (ArgumentName "options") . TInlineInterface $
-                    MProperty (PropertyName "node?") (TInterface (InterfaceName "HTMLElement") <> TPrimitive PNull)
-                    : case flags of
-                        ElmPrimitiveType (TPrimitive PNull) -> []
-                        elmType                  -> [MProperty (PropertyName "flags") $ elmTypeToTSType elmType]
+                    MProperty (PropertyName "node?") (TReference (ReferenceName "HTMLElement") <> TPrimitive PNull)
+                    : flagsType
                   ]
-                  (TInterface $ InterfaceName "Elm.Main.App")
+                  (TReference $ ReferenceName "Elm.Main.App")
               , getCustomTypes [flags] []
               )
+              where flagsType
+                      | flags == ElmPrimitiveType (TPrimitive PNull) = []
+                      | flags == ElmPrimitiveType (TPrimitive PVoid <> TPrimitive PNull) = []
+                      | otherwise                  = [MProperty (PropertyName "flags") $ elmTypeToTSType flags]
             Failed e -> pure $ Failed e
         Nothing -> pure $ Failed "Could not read flags type from main definition"
     Failed e -> pure $ Failed e
@@ -54,7 +56,8 @@ buildMain h acc = do
     go acc' = do
       eof <- hIsEOF h
       if eof then
-        if null acc' then pure $ Failed "Could not find main."
+        if null acc' then pure . Failed $ "Could not find main's type definition. "
+                                     <> "Are you specifying it explicitly?"
         else wrapUp acc'
       else do
         l <- hGetLine h

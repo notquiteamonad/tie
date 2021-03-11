@@ -71,6 +71,7 @@ test-suite tie-test
   other-modules:
       TIE.Elm.ExpressionSpec
       TIE.Elm.Internal.ExpressionSpec
+      TIE.Elm.MainSpec
       TIE.Elm.TypesSpec
       TIE.ResponseSpec
       TIE.TypeScriptSpec

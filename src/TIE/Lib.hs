@@ -35,30 +35,29 @@ interoperate dirname = do
       Ok (initFunction, neededCustomFlagTypes) -> generatePortProperties elmFiles >>= \case
           Ok (portProperties, neededCustomPortTypes) -> do
             let neededCustomTypes = sortNub $ neededCustomFlagTypes <> neededCustomPortTypes
-            additionalInterfaceResponses <- forM neededCustomTypes (findType elmFiles)
-            let additionalInterfaces = catSuccesses additionalInterfaceResponses
-            if length additionalInterfaces == length additionalInterfaceResponses then do
+            additionalNamespaceMemberResponses <- forM neededCustomTypes (findType elmFiles)
+            let additionalNamespaceMembers = catSuccesses additionalNamespaceMemberResponses
+            if length additionalNamespaceMembers == length additionalNamespaceMemberResponses then do
               case stripSuffix ".elm" $ toText mainFile of
                 Just dir -> do
                   createDirectoryIfMissing True (toString dir)
                   let outputFileName = dir <> "/index.d.ts"
                   writeFile (toString outputFileName) . toString . writeDocument $
-                    buildDocument initFunction additionalInterfaces portProperties
+                    buildDocument (initFunction : additionalNamespaceMembers) portProperties
                   pure $ pure (toString outputFileName)
                 Nothing -> pure $ Failed "Can't create output directory"
             else do
-              pure . Failed . mconcat . intersperse "\n" $ catFailures additionalInterfaceResponses
+              pure . Failed . mconcat . intersperse "\n" $ catFailures additionalNamespaceMemberResponses
           Failed e -> pure $ Failed e
       Failed e -> pure $ Failed e
     err -> pure err
 
-buildDocument :: NamespaceMember -> [Interface] -> Members -> Document
-buildDocument initFunction additionalInterfaces ports = Document
+buildDocument :: [NamespaceMember] -> Members -> Document
+buildDocument additionalNamespaceMembers ports = Document
   [ Namespace (NamespaceName "Elm")
       [ NMNamespace Private . Namespace (NamespaceName "Main") $
         [ NMInterface $ Interface Exported (InterfaceName "App")
           [ MPropertyGroup (PropertyName "ports") ports ]
-        , initFunction
-        ] <> (NMInterface <$> additionalInterfaces)
+        ] <> additionalNamespaceMembers
       ]
   ]

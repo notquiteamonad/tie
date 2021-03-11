@@ -10,20 +10,23 @@ module TIE.Elm.Types
   ) where
 
 import           Data.Text          (replace, strip, stripPrefix)
-import qualified Data.Text          as T (drop, dropEnd, dropWhile, head, null,
-                                          reverse, take, takeWhile)
+import qualified Data.Text          as T (drop, dropEnd, dropWhile, filter,
+                                          head, null, reverse, take, takeWhile)
 import           Data.Text.IO       (hGetLine)
 import           GHC.IO.Handle      (hIsEOF, hSetEncoding)
 import           System.IO          (mkTextEncoding)
 import           TIE.Elm.Expression (readNextExpression)
 import           TIE.Response       (Response (..), catResponses)
-import           TIE.TypeScript     (Exported (Exported), Interface (..),
+import           TIE.TypeScript     (AliasName (AliasName), Exported (Exported),
+                                     Interface (..),
                                      InterfaceName (InterfaceName),
                                      Member (MProperty, MPropertyGroup),
                                      Members,
+                                     NamespaceMember (NMAlias, NMInterface),
                                      PrimitiveName (PBoolean, PNull, PNumber, PString, PUnknown, PVoid),
                                      PropertyName (PropertyName),
-                                     TSType (TArray, TInterface, TPrimitive))
+                                     ReferenceName (ReferenceName),
+                                     TSType (TArray, TPrimitive, TReference))
 
 newtype NeededCustomType = NeededCustomType Text deriving (Eq, Ord, Show)
 
@@ -69,7 +72,7 @@ elmTypeFromText t = case readNextExpression $ "(" <> t <> ")" of
           Nothing ->
             case stripPrefix "Array " expr of
               Just aValue -> handleListValue aValue
-              Nothing     -> Ok . CustomType (TInterface (InterfaceName qualifiedName)) $ NeededCustomType qualifiedName
+              Nothing     -> Ok . CustomType (TReference (ReferenceName qualifiedName)) $ NeededCustomType qualifiedName
                               where qualifiedName = "Elm.Main." <> expr
           where handleListValue v = ElmArrayType <$> elmTypeFromText v
   Nothing ->
@@ -90,20 +93,20 @@ getCustomTypes (t:ts) acc =
     ElmArrayType a     -> getCustomTypes (a : ts) acc
     t1 `ETUnion` t2    -> getCustomTypes (t1 : t2 : ts) acc
 
-findType :: [FilePath] -> NeededCustomType -> IO (Response Text Interface)
+findType :: [FilePath] -> NeededCustomType -> IO (Response Text NamespaceMember)
 findType paths nct@(NeededCustomType c) = do
   case nonEmpty paths of
     Just paths' ->
-        maybe (findType (tail paths') nct) (pure . parseRecordType recordName) =<<
-          withFile (head paths') ReadMode \h -> findRecordTypeInFile h recordName 0 []
+        maybe (findType (tail paths') nct) (pure . parseCustomType recordName) =<<
+          withFile (head paths') ReadMode \h -> findCustomTypeInFile h recordName 0 []
     Nothing ->
       pure . Failed $ "Could not find custom type "
       <> recordName
-      <> ". Is it a record type defined within the directory specified?"
+      <> ". Is it a type alias defined within the directory specified?"
     where recordName = replace "Elm.Main." "" c
 
-findRecordTypeInFile :: Handle -> Text -> Int -> [Text] -> IO (Maybe Text)
-findRecordTypeInFile h recordName nestingLevel acc = do
+findCustomTypeInFile :: Handle -> Text -> Int -> [Text] -> IO (Maybe Text)
+findCustomTypeInFile h recordName nestingLevel acc = do
   enc <- mkTextEncoding "UTF-8//IGNORE"
   hSetEncoding h enc
   go recordName nestingLevel acc
@@ -116,20 +119,27 @@ findRecordTypeInFile h recordName nestingLevel acc = do
         else do
           l <- hGetLine h
           if null acc' then
-            if ["type", "alias", recordName'] == (take 3 . words . strip) l then findRecordTypeInFile h recordName' (nextNestingLevel l - 1) $ l : acc'
-            else findRecordTypeInFile h recordName' nestingLevel' acc'
+            if ["type", "alias", recordName'] == (take 3 . words . strip) l then findCustomTypeInFile h recordName' (nextNestingLevel l - 1) $ l : acc'
+            else findCustomTypeInFile h recordName' nestingLevel' acc'
           else do
             let nnl = nextNestingLevel l
             if nnl < 0 then
               wrapUp $ (T.reverse . T.dropWhile (/= '}') $ T.reverse l) : acc'
             else
-              findRecordTypeInFile h recordName' nnl $ l : acc'
+              findCustomTypeInFile h recordName' nnl $ l : acc'
         where wrapUp = pure . pure . mconcat . intersperse "\n" . reverse
               nextNestingLevel t = nestingLevel' + length (filter (== '{') s) - length (filter (== '}') s)
                 where s = toString t
 
-parseRecordType :: Text -> Text -> Response Text Interface
-parseRecordType name elmCode = Interface Exported (InterfaceName name) <$> recordMembers (removeOneBraceLayer elmCode)
+parseCustomType :: Text -> Text -> Response Text NamespaceMember
+parseCustomType name elmCode =
+  if T.null $ T.filter (\c -> c == '{' || c == '}') elmCode then
+    case elmTypeFromText . T.drop 1 $ T.dropWhile (/= '=') elmCode of
+      Ok elmType ->
+        pure $ NMAlias (AliasName name) (elmTypeToTSType elmType)
+      Failed e -> Failed e
+  else
+    NMInterface . Interface Exported (InterfaceName name) <$> recordMembers (removeOneBraceLayer elmCode)
 
 removeOneBraceLayer :: Text -> Text
 removeOneBraceLayer s =

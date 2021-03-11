@@ -1,5 +1,6 @@
 module TIE.TypeScript
-  ( Argument (..)
+  ( AliasName (..)
+  , Argument (..)
   , ArgumentName (..)
   , Document (..)
   , Exported (..)
@@ -14,6 +15,7 @@ module TIE.TypeScript
   , NamespaceName (..)
   , PrimitiveName (..)
   , PropertyName (..)
+  , ReferenceName (..)
   , TSType (..)
   , writeDocument
   ) where
@@ -49,6 +51,7 @@ type NamespaceMembers = [NamespaceMember]
 
 data NamespaceMember
   = NMNamespace Exported Namespace
+  | NMAlias AliasName TSType
   | NMInterface Interface
   | NMFunction Exported Function
   deriving (Eq, Show)
@@ -75,7 +78,7 @@ data Argument = Argument ArgumentName TSType
 type ReturnType = TSType
 
 data TSType
-  = TInterface InterfaceName
+  = TReference ReferenceName
   | TInlineInterface Members
   | TFunction Arguments ReturnType
   | TPrimitive PrimitiveName
@@ -84,7 +87,7 @@ data TSType
   deriving (Show)
 
 instance Eq TSType where
-  TInterface a == TInterface b = a == b
+  TReference a == TReference b = a == b
   TInlineInterface a == TInlineInterface b = a == b
   TFunction a b == TFunction c d = a == c && b == d
   TPrimitive a == TPrimitive b = a == b
@@ -120,6 +123,10 @@ newtype NamespaceName = NamespaceName Text deriving (Eq, Show)
 
 newtype InterfaceName = InterfaceName Text deriving (Eq, Show)
 
+newtype ReferenceName = ReferenceName Text deriving (Eq, Show)
+
+newtype AliasName = AliasName Text deriving (Eq, Show)
+
 newtype PropertyName = PropertyName Text deriving (Eq, Show)
 
 newtype FunctionName = FunctionName Text deriving (Eq, Show)
@@ -148,8 +155,12 @@ writeClosingBrace Inline =  " }"
 
 writeNamespaceMember :: Indentation -> NamespaceMember -> Text
 writeNamespaceMember indentation (NMNamespace exported n) = writeExported exported <> writeNamespace indentation n
+writeNamespaceMember _ (NMAlias name t) = writeAlias name t
 writeNamespaceMember indentation (NMInterface i) = writeInterface indentation i
 writeNamespaceMember _ (NMFunction exported f)  = writeExported exported <> "function " <> writeFunction f
+
+writeAlias :: AliasName -> TSType -> Text
+writeAlias (AliasName name) aliasFor = "type " <> name <> " = " <> writeTSType aliasFor <> ";"
 
 writeInterface :: Indentation -> Interface -> Text
 writeInterface indentation (Interface exported (InterfaceName name) members) =
@@ -178,7 +189,7 @@ writeProperty :: PropertyName -> TSType -> Text
 writeProperty (PropertyName name) t = name <> ": " <> writeTSType t <> ";"
 
 writeTSType :: TSType -> Text
-writeTSType (TInterface (InterfaceName i)) = i
+writeTSType (TReference (ReferenceName i)) = i
 writeTSType (TInlineInterface members) = writeInlineInterface members
 writeTSType (TFunction args returnType)                 = writeAnonymousFunctionType args returnType
 writeTSType (TPrimitive p)                 = writePrimitiveType p

@@ -1,6 +1,6 @@
 module TIE.TypeScriptSpec (spec) where
 
-import           TIE.TypeScript (Argument (Argument),
+import           TIE.TypeScript (AliasName (AliasName), Argument (Argument),
                                  ArgumentName (ArgumentName), Document (..),
                                  Exported (Exported, Private),
                                  Function (Function),
@@ -9,11 +9,12 @@ import           TIE.TypeScript (Argument (Argument),
                                  InterfaceName (InterfaceName),
                                  Member (MFunction, MProperty, MPropertyGroup),
                                  Namespace (Namespace),
-                                 NamespaceMember (NMFunction, NMInterface, NMNamespace),
+                                 NamespaceMember (NMAlias, NMFunction, NMInterface, NMNamespace),
                                  NamespaceName (NamespaceName),
                                  PrimitiveName (PBoolean, PNull, PNumber, PString, PUnknown, PVoid),
                                  PropertyName (PropertyName),
-                                 TSType (TArray, TFunction, TInlineInterface, TInterface, TPrimitive),
+                                 ReferenceName (ReferenceName),
+                                 TSType (TArray, TFunction, TInlineInterface, TPrimitive, TReference),
                                  writeDocument)
 import           Test.Hspec     (Spec, it, shouldBe)
 
@@ -30,7 +31,7 @@ testDocument = Document
       , NMInterface $ Interface Exported (InterfaceName "NSInterface1")
           [ MPropertyGroup (PropertyName "myGroup")
               [ MPropertyGroup (PropertyName "innerEmptyGroup") []
-              , MProperty (PropertyName "pInterface") $ TInterface (InterfaceName "Some.Package.Interface")
+              , MProperty (PropertyName "pInterface") $ TReference (ReferenceName "Some.Package.Interface")
               , MFunction $
                   Function
                     (FunctionName "foo")
@@ -40,6 +41,7 @@ testDocument = Document
                         TInlineInterface [MProperty (PropertyName "isGoodData") $ TPrimitive PBoolean]
                         <> TPrimitive PString
                         <> TPrimitive PNull
+                    , Argument (ArgumentName "yetAnotherParam") $ TReference (ReferenceName "S")
                     ]
                     (TPrimitive PVoid)
               , MFunction $
@@ -55,6 +57,7 @@ testDocument = Document
       , NMInterface $ Interface Private (InterfaceName "NSInterface2") []
       , NMFunction Exported . Function (FunctionName "topLevelFunction1") [] $ TPrimitive PVoid
       , NMFunction Private . Function (FunctionName "topLevelFunction2")  [] $ TPrimitive PString
+      , NMAlias (AliasName "MyNum") $ TPrimitive PNumber
       ]
   , Namespace (NamespaceName "TopLevelNS2") []
   ]
@@ -71,7 +74,7 @@ testDocumentOutput =
   , "      innerEmptyGroup: {"
   , "      };"
   , "      pInterface: Some.Package.Interface;"
-  , "      foo(bar: (string[] | number[])[], baz: unknown, additionalData: { isGoodData: boolean } | string | null): void;"
+  , "      foo(bar: (string[] | number[])[], baz: unknown, additionalData: { isGoodData: boolean } | string | null, yetAnotherParam: S): void;"
   , "      hof(f: (s: void | null) => null): void;"
   , "    };"
   , "  }"
@@ -79,6 +82,7 @@ testDocumentOutput =
   , "  }"
   , "  export function topLevelFunction1(): void;"
   , "  function topLevelFunction2(): string;"
+  , "  type MyNum = number;"
   , "}"
   , "export namespace TopLevelNS2 {"
   , "}"
