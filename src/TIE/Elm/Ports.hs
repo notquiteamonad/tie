@@ -14,7 +14,7 @@ import           TIE.Elm.Expression (readNextExpression)
 import           TIE.Elm.Types      (ElmType (..), NeededCustomType,
                                      elmTypeFromText, elmTypeToTSType,
                                      getCustomTypes)
-import           TIE.Response       (Response (..), catFailures, catSuccessess)
+import           TIE.Response       (Response (..), catFailures, catSuccesses)
 import           TIE.TypeScript     (Argument (Argument),
                                      ArgumentName (ArgumentName),
                                      Function (Function),
@@ -47,7 +47,7 @@ getPortsFromPaths :: [FilePath] -> IO (Response Text [Port])
 getPortsFromPaths paths = do
   portBodies <- concat <$> forM paths \path -> withFile path ReadMode \h -> getPortsFromModule h False []
   let portResponses = parsePort <$> portBodies
-  let successes = catSuccessess portResponses
+  let successes = catSuccesses portResponses
   if length successes == length portResponses then
     pure $ Ok successes
   else
@@ -117,5 +117,5 @@ parsePort t =
     Just relevantType ->
       let direction = if "->" `T.isInfixOf` relevantType then In else Out
           elmType = elmTypeFromText $ T.takeWhile (/= '-') relevantType
-      in pure $ Port direction (PortName identifier) elmType
+      in Port direction (PortName identifier) <$> elmType
     Nothing -> Failed $ "Could not parse type " <> relevantTypeString <> " in port definition " <> t

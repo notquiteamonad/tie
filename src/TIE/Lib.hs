@@ -13,7 +13,7 @@ import           TIE.Elm.Main     (generateInitFunction)
 import           TIE.Elm.Ports    (generatePortProperties)
 import           TIE.Elm.Types    (findType)
 import           TIE.FS           (getAllElmFilesIn, getMainElmFile)
-import           TIE.Response     (Response (..), catFailures, catSuccessess)
+import           TIE.Response     (Response (..), catFailures, catSuccesses)
 import           TIE.TypeScript   (Document (Document),
                                    Exported (Exported, Private),
                                    Interface (Interface),
@@ -36,7 +36,7 @@ interoperate dirname = do
           Ok (portProperties, neededCustomPortTypes) -> do
             let neededCustomTypes = sortNub $ neededCustomFlagTypes <> neededCustomPortTypes
             additionalInterfaceResponses <- forM neededCustomTypes (findType elmFiles)
-            let additionalInterfaces = catSuccessess additionalInterfaceResponses
+            let additionalInterfaces = catSuccesses additionalInterfaceResponses
             if length additionalInterfaces == length additionalInterfaceResponses then do
               case stripSuffix ".elm" $ toText mainFile of
                 Just dir -> do

@@ -81,17 +81,29 @@ data TSType
   | TPrimitive PrimitiveName
   | TArray TSType
   | TUnion TSType TSType
-  deriving (Eq, Show)
+  deriving (Show)
+
+instance Eq TSType where
+  TInterface a == TInterface b = a == b
+  TInlineInterface a == TInlineInterface b = a == b
+  TFunction a b == TFunction c d = a == c && b == d
+  TPrimitive a == TPrimitive b = a == b
+  TArray a == TArray b = a == b
+  TUnion a b == TUnion c d = (a == c && b == d) || (a == d && b == c)
+  _ == _ = False
 
 instance Semigroup TSType where
+  lhs@(TPrimitive a) <> rhs@(TPrimitive b)
+    | a == b = lhs
+    | otherwise = lhs `TUnion` rhs
+  lhs@(TUnion a b) <> rhs@(TUnion c d)
+    | (a == c && b == d) || (a == d && b == c) = lhs
+    | otherwise = lhs `TUnion` rhs
   lhs@(a@(TPrimitive _) `TUnion` b@(TPrimitive _)) <> rhs
     | a == rhs || b == rhs = lhs
     | otherwise = lhs `TUnion` rhs
   lhs <> rhs@(a@(TPrimitive _) `TUnion` b@(TPrimitive _))
     | a == lhs || b == lhs = rhs
-    | otherwise = lhs `TUnion` rhs
-  lhs@(TPrimitive a) <> rhs@(TPrimitive b)
-    | a == b = lhs
     | otherwise = lhs `TUnion` rhs
   a <> b = a `TUnion` b
 

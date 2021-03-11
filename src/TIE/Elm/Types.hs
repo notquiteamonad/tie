@@ -9,19 +9,21 @@ module TIE.Elm.Types
   , getCustomTypes
   ) where
 
-import           Data.Text      (replace, strip, stripPrefix)
-import qualified Data.Text      as T (drop, dropEnd, dropWhile, head, null,
-                                      reverse, take, takeWhile)
-import           Data.Text.IO   (hGetLine)
-import           GHC.IO.Handle  (hIsEOF, hSetEncoding)
-import           System.IO      (mkTextEncoding)
-import           TIE.Response   (Response (..))
-import           TIE.TypeScript (Exported (Exported), Interface (..),
-                                 InterfaceName (InterfaceName),
-                                 Member (MProperty, MPropertyGroup), Members,
-                                 PrimitiveName (PBoolean, PNull, PNumber, PString, PUnknown, PVoid),
-                                 PropertyName (PropertyName),
-                                 TSType (TArray, TInterface, TPrimitive))
+import           Data.Text          (replace, strip, stripPrefix)
+import qualified Data.Text          as T (drop, dropEnd, dropWhile, head, null,
+                                          reverse, take, takeWhile)
+import           Data.Text.IO       (hGetLine)
+import           GHC.IO.Handle      (hIsEOF, hSetEncoding)
+import           System.IO          (mkTextEncoding)
+import           TIE.Elm.Expression (readNextExpression)
+import           TIE.Response       (Response (..), catResponses)
+import           TIE.TypeScript     (Exported (Exported), Interface (..),
+                                     InterfaceName (InterfaceName),
+                                     Member (MProperty, MPropertyGroup),
+                                     Members,
+                                     PrimitiveName (PBoolean, PNull, PNumber, PString, PUnknown, PVoid),
+                                     PropertyName (PropertyName),
+                                     TSType (TArray, TInterface, TPrimitive))
 
 newtype NeededCustomType = NeededCustomType Text deriving (Eq, Ord, Show)
 
@@ -30,38 +32,48 @@ data ElmType
   | CustomType TSType NeededCustomType
   | ElmArrayType ElmType
   | ETUnion ElmType ElmType
-  deriving (Eq, Show)
+  deriving (Show)
+
+instance Eq ElmType where
+  ElmPrimitiveType a == ElmPrimitiveType b = a == b
+  CustomType a b == CustomType c d = a == c && b == d
+  ElmArrayType a == ElmArrayType b = a == b
+  ETUnion a b == ETUnion c d = (a == c && b == d) || (a == d && b == c)
+  _ == _ = False
 
 instance Semigroup ElmType where
   ElmPrimitiveType a <> ElmPrimitiveType b = ElmPrimitiveType $ a <> b
   a <> b                                   = a `ETUnion` b
 
-elmTypeFromText :: Text -> ElmType
-elmTypeFromText t = case strip t of
-  "String"            -> ElmPrimitiveType $ TPrimitive PString
-  "Int"               -> ElmPrimitiveType $ TPrimitive PNumber
-  "Float"             -> ElmPrimitiveType $ TPrimitive PNumber
-  "Bool"              -> ElmPrimitiveType $ TPrimitive PBoolean
-  "Json.Decode.Value" -> ElmPrimitiveType $ TPrimitive PUnknown
-  "Json.Encode.Value" -> ElmPrimitiveType $ TPrimitive PUnknown
-  "Value" -> ElmPrimitiveType $ TPrimitive PUnknown
-  "()"                -> ElmPrimitiveType $ TPrimitive PNull
-  _                   ->
-    case stripPrefix "Maybe " (strip t) of
+elmTypeFromText :: Text -> Response Text ElmType
+elmTypeFromText t = case readNextExpression $ "(" <> t <> ")" of
+  Just "String"            -> Ok . ElmPrimitiveType $ TPrimitive PString
+  Just "Int"               -> Ok . ElmPrimitiveType $ TPrimitive PNumber
+  Just "Float"             -> Ok . ElmPrimitiveType $ TPrimitive PNumber
+  Just "Bool"              -> Ok . ElmPrimitiveType $ TPrimitive PBoolean
+  Just "Json.Decode.Value" -> Ok . ElmPrimitiveType $ TPrimitive PUnknown
+  Just "Json.Encode.Value" -> Ok . ElmPrimitiveType $ TPrimitive PUnknown
+  Just "Value" -> Ok . ElmPrimitiveType $ TPrimitive PUnknown
+  Just "()"                -> Ok . ElmPrimitiveType $ TPrimitive PNull
+  Just expr                   ->
+    case stripPrefix "Maybe " expr of
       Just mValue -> case elmTypeFromText mValue of
-        ElmPrimitiveType p -> ElmPrimitiveType $ p <> TPrimitive PVoid <> TPrimitive PNull
-        CustomType c nct   -> CustomType (c <> TPrimitive PVoid <> TPrimitive PNull) nct
-        ElmArrayType a -> ElmArrayType a <> ElmPrimitiveType (TPrimitive PVoid <> TPrimitive PNull)
-        t1 `ETUnion ` t2 -> t1 <> t2 <> ElmPrimitiveType (TPrimitive PVoid <> TPrimitive PNull)
+        Ok (ElmPrimitiveType p) -> Ok . ElmPrimitiveType $ p <> TPrimitive PVoid <> TPrimitive PNull
+        Ok (CustomType c nct)   -> Ok $ CustomType (c <> TPrimitive PVoid <> TPrimitive PNull) nct
+        Ok (ElmArrayType a) -> Ok $ ElmArrayType a <> ElmPrimitiveType (TPrimitive PVoid <> TPrimitive PNull)
+        Ok (t1 `ETUnion ` t2) -> Ok $ t1 <> t2 <> ElmPrimitiveType (TPrimitive PVoid <> TPrimitive PNull)
+        Failed f -> Failed f
       Nothing ->
-        case stripPrefix "List " (strip t) of
+        case stripPrefix "List " expr of
           Just lValue -> handleListValue lValue
           Nothing ->
-            case stripPrefix "Array " (strip t) of
+            case stripPrefix "Array " expr of
               Just aValue -> handleListValue aValue
-              Nothing     -> CustomType (TInterface (InterfaceName qualifiedName)) $ NeededCustomType qualifiedName
-                              where qualifiedName = "Elm.Main." <> strip t
-          where handleListValue v = ElmArrayType $ elmTypeFromText v
+              Nothing     -> Ok . CustomType (TInterface (InterfaceName qualifiedName)) $ NeededCustomType qualifiedName
+                              where qualifiedName = "Elm.Main." <> expr
+          where handleListValue v = ElmArrayType <$> elmTypeFromText v
+  Nothing ->
+    Failed $ "Could not parse type " <> strip t
 
 elmTypeToTSType :: ElmType -> TSType
 elmTypeToTSType (ElmPrimitiveType t) = t
@@ -82,7 +94,7 @@ findType :: [FilePath] -> NeededCustomType -> IO (Response Text Interface)
 findType paths nct@(NeededCustomType c) = do
   case nonEmpty paths of
     Just paths' ->
-        maybe (findType (tail paths') nct) (pure . pure . parseRecordType recordName) =<<
+        maybe (findType (tail paths') nct) (pure . parseRecordType recordName) =<<
           withFile (head paths') ReadMode \h -> findRecordTypeInFile h recordName 0 []
     Nothing ->
       pure . Failed $ "Could not find custom type "
@@ -116,23 +128,23 @@ findRecordTypeInFile h recordName nestingLevel acc = do
               nextNestingLevel t = nestingLevel' + length (filter (== '{') s) - length (filter (== '}') s)
                 where s = toString t
 
-parseRecordType :: Text -> Text -> Interface
-parseRecordType name elmCode = Interface Exported (InterfaceName name) . recordMembers $ removeOneBraceLayer elmCode
+parseRecordType :: Text -> Text -> Response Text Interface
+parseRecordType name elmCode = Interface Exported (InterfaceName name) <$> recordMembers (removeOneBraceLayer elmCode)
 
 removeOneBraceLayer :: Text -> Text
 removeOneBraceLayer s =
           T.dropEnd 1 . T.drop 1 . T.reverse . T.dropWhile (/= '}') . T.reverse $ T.dropWhile (/= '{') s
 
-recordMembers :: Text -> Members
-recordMembers t = recordMember <$> splitIntoMembers 0 [] "" t
+recordMembers :: Text -> Response Text Members
+recordMembers t = catResponses $ recordMember <$> splitIntoMembers 0 [] "" t
 
-recordMember :: Text -> Member
+recordMember :: Text -> Response Text Member
 recordMember m =
   let identifier = T.takeWhile (/= ':') m
       rest = T.drop 1 $ T.dropWhile (/= ':') m
   in case removeOneBraceLayer m of
-        "" -> MProperty (PropertyName identifier) . elmTypeToTSType $ elmTypeFromText rest
-        _  -> MPropertyGroup (PropertyName identifier) . recordMembers $ removeOneBraceLayer rest
+        "" -> MProperty (PropertyName identifier) . elmTypeToTSType <$> elmTypeFromText rest
+        _ -> MPropertyGroup (PropertyName identifier) <$> recordMembers (removeOneBraceLayer rest)
 
 splitIntoMembers :: Int -> [Text] -> Text -> Text -> [Text]
 splitIntoMembers innerLevel acc buf t =
