@@ -72,6 +72,7 @@ test-suite tie-test
       TIE.Elm.ExpressionSpec
       TIE.Elm.Internal.ExpressionSpec
       TIE.Elm.MainSpec
+      TIE.Elm.PortsSpec
       TIE.Elm.TypesSpec
       TIE.ResponseSpec
       TIE.TypeScriptSpec
