@@ -69,6 +69,7 @@ test-suite tie-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      TestUtils
       TIE.Elm.ExpressionSpec
       TIE.Elm.Internal.ExpressionSpec
       TIE.Elm.MainSpec
