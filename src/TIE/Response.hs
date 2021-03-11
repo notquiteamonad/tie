@@ -1,4 +1,4 @@
-module TIE.Response (Response(Ok, Failed), catSuccessess, catFailures) where
+module TIE.Response (Response(Ok, Failed), catSuccesses, catFailures, catResponses) where
 
 data Response e a = Failed e | Ok a deriving (Eq, Show)
 
@@ -15,8 +15,14 @@ instance Monad (Response e) where
   Failed e >>= _ = Failed e
   Ok a >>= f     = f a
 
-catSuccessess :: [Response e a] -> [a]
-catSuccessess responses = do
+catResponses :: [Response e a] -> Response e [a]
+catResponses responses =
+  case viaNonEmpty head $ catFailures responses of
+    Just failure -> Failed failure
+    Nothing      -> Ok $ fromOk <$> responses
+
+catSuccesses :: [Response e a] -> [a]
+catSuccesses responses = do
   let successes = filter (not . isFailed) responses
   fromOk <$> successes
 

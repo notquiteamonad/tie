@@ -29,18 +29,19 @@ generateInitFunction mainPath = do
     Ok mainDefinition ->
       case readNextExpression . unwords . drop 3 $ words mainDefinition of
         Just flagsExpression ->
-          let flags = elmTypeFromText flagsExpression
-          in pure $ pure
-            ( NMFunction Exported $ Function (FunctionName "init")
-                [ Argument (ArgumentName "options") . TInlineInterface $
-                  MProperty (PropertyName "node?") (TInterface (InterfaceName "HTMLElement") <> TPrimitive PNull)
-                  : case flags of
-                      ElmPrimitiveType (TPrimitive PNull) -> []
-                      elmType                  -> [MProperty (PropertyName "flags") $ elmTypeToTSType elmType]
-                ]
-                (TInterface $ InterfaceName "Elm.Main.App")
-            , getCustomTypes [flags] []
-            )
+          case elmTypeFromText flagsExpression of
+            Ok flags -> pure $ pure
+              ( NMFunction Exported $ Function (FunctionName "init")
+                  [ Argument (ArgumentName "options") . TInlineInterface $
+                    MProperty (PropertyName "node?") (TInterface (InterfaceName "HTMLElement") <> TPrimitive PNull)
+                    : case flags of
+                        ElmPrimitiveType (TPrimitive PNull) -> []
+                        elmType                  -> [MProperty (PropertyName "flags") $ elmTypeToTSType elmType]
+                  ]
+                  (TInterface $ InterfaceName "Elm.Main.App")
+              , getCustomTypes [flags] []
+              )
+            Failed e -> pure $ Failed e
         Nothing -> pure $ Failed "Could not read flags type from main definition"
     Failed e -> pure $ Failed e
 

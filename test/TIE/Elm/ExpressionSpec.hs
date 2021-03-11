@@ -1,7 +1,7 @@
 module TIE.Elm.ExpressionSpec (spec) where
 
 import           TIE.Elm.Expression (readNextExpression)
-import           Test.Hspec
+import           Test.Hspec         (Spec, describe, it, shouldBe)
 
 spec :: Spec
 spec =
