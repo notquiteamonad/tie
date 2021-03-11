@@ -1,10 +1,6 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module TIE.Elm.TypesSpec (spec) where
 
 import qualified Data.Text             as T
-import           Language.Haskell.TH   (listE, litE, runIO, stringL)
-import           System.Directory      (getCurrentDirectory)
 import           System.FilePath       ((</>))
 import           TIE.Elm.Types         (ElmType (CustomType, ElmArrayType, ElmPrimitiveType),
                                         NeededCustomType (NeededCustomType),
@@ -22,11 +18,10 @@ import           TIE.TypeScript        (AliasName (AliasName),
                                         TSType (TPrimitive, TReference))
 import           Test.Hspec            (Spec, describe, it, shouldBe)
 import           Test.Hspec.QuickCheck (prop)
+import           TestUtils             (testDataDir)
 
 testFilePaths :: [FilePath]
-testFilePaths = $(runIO getCurrentDirectory >>= \dir -> listE $
-                    (\p -> litE . stringL $ dir </> "test" </> "test-data" </> p)
-                    <$> [ "TestA.elm", "TestB.elm", "more-main-examples" </> "Main_Alias_Flags.elm" ])
+testFilePaths = (testDataDir </>) <$> [ "TestA.elm", "TestB.elm", "more-main-examples" </> "Main_Alias_Flags.elm" ]
 
 spec :: Spec
 spec = do
