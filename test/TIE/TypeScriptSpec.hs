@@ -64,7 +64,9 @@ testDocument = Document
 
 testDocumentOutput :: [Text]
 testDocumentOutput =
-  [ "export namespace TopLevelNS1 {"
+  [ "// This file was generated automatically by TIE (TypeScript Interoperator for Elm)."
+  , ""
+  , "export namespace TopLevelNS1 {"
   , "  namespace InnerNS1 {"
   , "  }"
   , "  export namespace InnerNS2 {"

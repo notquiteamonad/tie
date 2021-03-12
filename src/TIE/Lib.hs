@@ -41,7 +41,7 @@ interoperate dirname = do
                   Just dir -> do
                     createDirectoryIfMissing True (toString dir)
                     let outputFileName = toString dir </> "index.d.ts"
-                    writeFile (toString outputFileName) . toString . writeDocument $
+                    writeFile outputFileName . toString . writeDocument $
                       buildDocument (initFunction : additionalNamespaceMembers) portProperties
                     pure $ pure (toString outputFileName)
                   Nothing -> pure $ Failed "Can't create output directory"

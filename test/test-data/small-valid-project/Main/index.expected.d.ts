@@ -1,3 +1,5 @@
+// This file was generated automatically by TIE (TypeScript Interoperator for Elm).
+
 export namespace Elm {
   namespace Main {
     export interface App {
