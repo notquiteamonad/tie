@@ -1,5 +1,7 @@
 module TIE.Response (Response(Ok, Failed), catSuccesses, catFailures, catResponses) where
 
+import           Control.Monad (ap)
+
 data Response e a = Failed e | Ok a deriving (Eq, Show)
 
 instance Functor (Response e) where
@@ -8,8 +10,7 @@ instance Functor (Response e) where
 
 instance Applicative (Response e) where
   pure = Ok
-  Failed e <*> _ = Failed e
-  Ok a <*> b     = fmap a b
+  (<*>) = ap
 
 instance Monad (Response e) where
   Failed e >>= _ = Failed e
