@@ -1,6 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 
-module TIE.Elm.Main (generateInitFunction) where
+module TIE.Elm.Init (generateInitFunction) where
 
 import qualified Data.Text          as T (isPrefixOf, null, strip)
 import           Data.Text.IO       (hGetLine)
