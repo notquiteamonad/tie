@@ -1,7 +1,7 @@
-module TIE.Elm.MainSpec (spec) where
+module TIE.Elm.InitSpec (spec) where
 
 import           System.FilePath ((</>))
-import           TIE.Elm.Main    (generateInitFunction)
+import           TIE.Elm.Init    (generateInitFunction)
 import           TIE.Elm.Types   (NeededCustomType (NeededCustomType))
 import           TIE.Response    (Response (Failed, Ok))
 import           TIE.TypeScript  (Argument (Argument),

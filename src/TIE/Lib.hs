@@ -7,9 +7,8 @@ module TIE.Lib
     ) where
 
 import           Data.Text        (stripSuffix)
-import           GHC.IO.Device    (IODeviceType (Directory))
 import           System.Directory (createDirectoryIfMissing)
-import           TIE.Elm.Main     (generateInitFunction)
+import           TIE.Elm.Init     (generateInitFunction)
 import           TIE.Elm.Ports    (generatePortProperties)
 import           TIE.Elm.Types    (findType)
 import           TIE.FS           (getAllElmFilesIn, getMainElmFile)
@@ -29,7 +28,7 @@ import           TIE.TypeScript   (Document (Document),
 -}
 interoperate :: FilePath -> IO (Response Text FilePath)
 interoperate dirname = do
-  elmFiles <- getAllElmFilesIn (dirname, Directory)
+  elmFiles <- getAllElmFilesIn dirname
   case getMainElmFile elmFiles of
     Ok mainFile -> generateInitFunction mainFile >>= \case
       Ok (initFunction, neededCustomFlagTypes) -> generatePortProperties elmFiles >>= \case

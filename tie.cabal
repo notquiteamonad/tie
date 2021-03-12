@@ -24,8 +24,8 @@ library
   exposed-modules:
       Prelude
       TIE.Elm.Expression
+      TIE.Elm.Init
       TIE.Elm.Internal.Expression
-      TIE.Elm.Main
       TIE.Elm.Ports
       TIE.Elm.Types
       TIE.FS
@@ -71,10 +71,11 @@ test-suite tie-test
   other-modules:
       TestUtils
       TIE.Elm.ExpressionSpec
+      TIE.Elm.InitSpec
       TIE.Elm.Internal.ExpressionSpec
-      TIE.Elm.MainSpec
       TIE.Elm.PortsSpec
       TIE.Elm.TypesSpec
+      TIE.FSSpec
       TIE.ResponseSpec
       TIE.TypeScriptSpec
       Paths_tie
