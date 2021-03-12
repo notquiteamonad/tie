@@ -15,6 +15,13 @@ packages:
   original:
     git: https://github.com/jhrcek/base-noprelude.git
     commit: f382c80eb10521fb6a56d6451b6f983000cb010a
+- completed:
+    hackage: safe-coloured-text-0.0.0.0@sha256:3e614882573291a911564a0b936b2449c4855c2e315086d1337a6e6c027cf2b0,1021
+    pantry-tree:
+      size: 376
+      sha256: 0bec7a33efcec8989ba23a906ebdbbe85af70a3ee2993be99eb0911deb43ce3b
+  original:
+    hackage: safe-coloured-text-0.0.0.0@sha256:3e614882573291a911564a0b936b2449c4855c2e315086d1337a6e6c027cf2b0,1021
 snapshots:
 - completed:
     size: 565266

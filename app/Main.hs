@@ -13,6 +13,8 @@ import           System.Environment    (getArgs)
 import           System.FSNotify       (eventPath, watchTree, withManager)
 import           System.IO             (hFlush)
 import           TIE.Lib               (Response (..), interoperate)
+import           Text.Colour           (bold, chunk, fore, green, putChunks,
+                                        red, underline)
 
 main :: IO ()
 main = do
@@ -51,21 +53,27 @@ cliOptions =
   ]
 
 showUsage :: IO ()
-showUsage = do
-  putTextLn ""
-  putTextLn "TIE - TypeScript Interoperator for Elm"
-  putTextLn ""
-  putTextLn "Usage: tie [OPTIONS...] DIRNAME"
-  putTextLn ""
-  putTextLn "Available options:"
-  putTextLn "\t    --help   Print this help message"
-  putTextLn "\t-w  --watch  Watch for changes in the specified directory and regenerate"
-  putTextLn "\t             definitions every time a change occurs"
-  putTextLn ""
+showUsage = putChunks
+    [ bold $ chunk "\nTIE - TypeScript Interoperator for Elm\n\n"
+    , bold $ chunk "Usage: "
+    , fore green . bold $ chunk "tie "
+    , bold $ chunk "[OPTIONS...] DIRNAME\n\n"
+    , bold $ chunk "Available options:\n"
+    , bold $ chunk "        --help   "
+    , chunk "Print this help message\n"
+    , bold $ chunk "    -w  --watch  "
+    , chunk "Watch for changes in the specified directory and regenerate\n"
+    , chunk "                 definitions every time a change occurs\n\n"
+    ]
 
 printResponse :: Response Text FilePath -> IO ()
 printResponse = \case
-  Ok path -> putStrLn $ "Done! You can see the generated type definitions at " <> path
+  Ok path ->
+    putChunks
+      [ fore green . bold $ chunk "Done! You can see the generated type definitions at "
+      , fore green . underline . chunk $ toText path <> "\n"
+      ]
   Failed err -> do
-    putTextLn err
-    putTextLn "Regeneration failed. Check the logs above for more info."
+    putChunks
+      ((fore red . bold $ chunk "Some errors were encountered, so new TypeScript definitions were not generated:\n\n")
+      : ((\l -> fore red . chunk $ "  - " <> l <> "\n") <$> lines err))
