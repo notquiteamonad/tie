@@ -12,9 +12,13 @@ bug-reports:    https://github.com/notquiteamonad/tie/issues
 author:         notquiteamonad
 maintainer:     44178347+notquiteamonad@users.noreply.github.com
 copyright:      Copyright notquiteamonad 2021
+license:        BSD3
+license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
     README.md
+    ChangeLog.md
+    LICENSE
 
 source-repository head
   type: git

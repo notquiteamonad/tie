@@ -1,5 +1,6 @@
 name: tie
 version: 0.1.0.0
+license: BSD3
 github: "notquiteamonad/tie"
 author: "notquiteamonad"
 maintainer: "44178347+notquiteamonad@users.noreply.github.com"
@@ -19,6 +20,8 @@ dependencies:
 
 extra-source-files:
   - README.md
+  - ChangeLog.md
+  - LICENSE
 
 ghc-options:
   - -Wall
