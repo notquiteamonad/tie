@@ -1,0 +1,30 @@
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+name: build windows binary
+jobs:
+  build:
+    name: Build
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: haskell/actions/setup@v1
+        with:
+          ghc-version: '8.10.4'
+          enable-stack: true
+          stack-version: 'latest'
+      - uses: actions/cache@v2.1.3
+        name: Cache ~/.stack
+        with:
+          path: ~/.stack
+          key: stack-windows
+      - run: 'mkdir C:\sr'
+      - run: 'echo "allow-newer: true" > C:\sr\config.yaml'
+      - run: stack build --no-nix --system-ghc
+      - uses: actions/upload-artifact@v2
+        with:
+          name: tie-windows
+          path: .stack-work
+      
