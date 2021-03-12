@@ -44,6 +44,7 @@ extra-deps:
   - git: https://github.com/jhrcek/base-noprelude.git
     commit: f382c80eb10521fb6a56d6451b6f983000cb010a
   - safe-coloured-text-0.0.0.0@sha256:3e614882573291a911564a0b936b2449c4855c2e315086d1337a6e6c027cf2b0,1021
+  - terminfo-0.4.1.4@sha256:64489de75cd4a4a6b427bb870b66274922c851570642e0fd242d320dcb67322b,1658
 
 # Override default flag values for local packages and extra-deps
 # flags: {}
