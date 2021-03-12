@@ -25,7 +25,7 @@ import           Data.Text (replace)
 newtype Document = Document [Namespace] deriving (Eq, Ord, Show)
 
 writeDocument :: Document -> Text
-writeDocument (Document xs) = replace "; }" " }" (onePerLine (Indented 0) (\i n -> "export " <> writeNamespace i n) xs) <> "\n"
+writeDocument (Document xs) = replace "; }" " }" (onePerLine (Indented 0) (\i n -> "export " <> writeNamespace i n) xs)
 
 data Indentation
   = Indented Int
