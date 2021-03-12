@@ -86,5 +86,4 @@ testDocumentOutput =
   , "}"
   , "export namespace TopLevelNS2 {"
   , "}"
-  , ""
   ]
