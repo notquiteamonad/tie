@@ -6,7 +6,7 @@ module TIE.FS
 import           Data.Text              (isSuffixOf)
 import           GHC.IO.Device          (IODeviceType (Directory, RegularFile))
 import           System.Directory       (listDirectory)
-import           System.IO.Error
+import           System.IO.Error        (catchIOError)
 import           System.Posix.Internals (fileType)
 import           TIE.Response           (Response (..))
 

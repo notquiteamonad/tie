@@ -10,3 +10,6 @@
 
 # HSpec Failures
 /.hspec-failures
+
+# Generated test files
+/test/test-data/small-valid-project/Main/index.d.ts

@@ -110,6 +110,7 @@ spec = do
           [ MProperty (PropertyName "username") (TPrimitive PString)
           , MProperty (PropertyName "email") (TPrimitive PString)
           ]
+        , []
         )
     it "can find a strangely-formatted complex record type" do
       bar <- findType testFilePaths (NeededCustomType "Bar")
@@ -120,7 +121,16 @@ spec = do
           , MProperty (PropertyName "email") (TPrimitive PString <> TPrimitive PVoid <> TPrimitive PNull)
           , MProperty (PropertyName "bar") (TReference (ReferenceName "Elm.Main.Bar"))
           ]
+        , [NeededCustomType "Elm.Main.Bar"]
         )
     it "can find a non-record type alias" do
       s <- findType testFilePaths (NeededCustomType "S")
-      s `shouldBe` Ok (NMAlias (AliasName "S") (TPrimitive PString))
+      s `shouldBe` Ok (NMAlias (AliasName "S") (TPrimitive PString), [])
+    it "can find a record type which needs another custom type to be complete" do
+      foo <- findType testFilePaths (NeededCustomType "Baz")
+      foo `shouldBe` Ok
+        (NMInterface $ Interface Exported (InterfaceName "Baz")
+          [ MProperty (PropertyName "myI") (TReference (ReferenceName "Elm.Main.I"))
+          ]
+        , [NeededCustomType "Elm.Main.I"]
+        )

@@ -1,9 +1,9 @@
 module TIE.FSSpec (spec) where
 
-import           System.FilePath
-import           TIE.FS
-import           Test.Hspec
-import           TestUtils
+import           System.FilePath ((</>))
+import           TIE.FS          (getAllElmFilesIn)
+import           Test.Hspec      (Spec, describe, it, shouldBe)
+import           TestUtils       (testDataDir)
 
 spec :: Spec
 spec = do
@@ -20,6 +20,7 @@ spec = do
         , testDataDir </> "more-main-examples" </> "Main_Unusual_Formatting.elm"
         , testDataDir </> "more-port-examples" </> "BadPort1.elm"
         , testDataDir </> "more-port-examples" </> "BadPort2.elm"
+        , testDataDir </> "small-valid-project" </> "Main.elm"
         ]
     it "just gets the one file if the argument is a regular elm file" do
       let filePath = testDataDir </> "Main.elm"
