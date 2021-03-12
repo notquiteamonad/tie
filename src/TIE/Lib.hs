@@ -8,6 +8,7 @@ module TIE.Lib
 
 import           Data.Text        (stripSuffix)
 import           System.Directory (createDirectoryIfMissing)
+import           System.FilePath  ((</>))
 import           TIE.Elm.Init     (generateInitFunction)
 import           TIE.Elm.Ports    (generatePortProperties)
 import           TIE.Elm.Types    (NeededCustomType, findType)
@@ -39,7 +40,7 @@ interoperate dirname = do
                 case stripSuffix ".elm" $ toText mainFile of
                   Just dir -> do
                     createDirectoryIfMissing True (toString dir)
-                    let outputFileName = dir <> "/index.d.ts"
+                    let outputFileName = toString dir </> "index.d.ts"
                     writeFile (toString outputFileName) . toString . writeDocument $
                       buildDocument (initFunction : additionalNamespaceMembers) portProperties
                     pure $ pure (toString outputFileName)

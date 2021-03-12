@@ -6,6 +6,7 @@ module TIE.FS
 import           Data.Text              (isSuffixOf)
 import           GHC.IO.Device          (IODeviceType (Directory, RegularFile))
 import           System.Directory       (listDirectory)
+import           System.FilePath        ((</>))
 import           System.IO.Error        (catchIOError)
 import           System.Posix.Internals (fileType)
 import           TIE.Response           (Response (..))
@@ -23,9 +24,8 @@ getAllElmFilesIn topDir = do
         filesInDir <- listDirectory f
         if null filesInDir then pure []
         else do
-          typedFilesInDir <- forM ((dirName <>) <$> filesInDir) fileTypeTuple
+          typedFilesInDir <- forM ((f </>) <$> filesInDir) fileTypeTuple
           mconcat $ go <$> typedFilesInDir
-        where dirName = if "/" `isSuffixOf` toText f then f else f <> "/"
       RegularFile ->
         pure [elmFile | ".elm" `isSuffixOf` toText f, elmFile <- [f]]
       _ -> pure []
