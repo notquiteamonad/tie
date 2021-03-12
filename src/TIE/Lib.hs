@@ -10,7 +10,7 @@ import           Data.Text        (stripSuffix)
 import           System.Directory (createDirectoryIfMissing)
 import           TIE.Elm.Init     (generateInitFunction)
 import           TIE.Elm.Ports    (generatePortProperties)
-import           TIE.Elm.Types    (findType)
+import           TIE.Elm.Types    (NeededCustomType, findType)
 import           TIE.FS           (getAllElmFilesIn, getMainElmFile)
 import           TIE.Response     (Response (..), catFailures, catSuccesses)
 import           TIE.TypeScript   (Document (Document),
@@ -33,23 +33,38 @@ interoperate dirname = do
     Ok mainFile -> generateInitFunction mainFile >>= \case
       Ok (initFunction, neededCustomFlagTypes) -> generatePortProperties elmFiles >>= \case
           Ok (portProperties, neededCustomPortTypes) -> do
-            let neededCustomTypes = sortNub $ neededCustomFlagTypes <> neededCustomPortTypes
-            additionalNamespaceMemberResponses <- forM neededCustomTypes (findType elmFiles)
-            let additionalNamespaceMembers = catSuccesses additionalNamespaceMemberResponses
-            if length additionalNamespaceMembers == length additionalNamespaceMemberResponses then do
-              case stripSuffix ".elm" $ toText mainFile of
-                Just dir -> do
-                  createDirectoryIfMissing True (toString dir)
-                  let outputFileName = dir <> "/index.d.ts"
-                  writeFile (toString outputFileName) . toString . writeDocument $
-                    buildDocument (initFunction : additionalNamespaceMembers) portProperties
-                  pure $ pure (toString outputFileName)
-                Nothing -> pure $ Failed "Can't create output directory"
-            else do
-              pure . Failed . mconcat . intersperse "\n" $ catFailures additionalNamespaceMemberResponses
+            let neededCustomTypes = neededCustomFlagTypes <> neededCustomPortTypes
+            getAdditionalNamespaceMembers elmFiles neededCustomTypes >>= \case
+              Ok additionalNamespaceMembers ->
+                case stripSuffix ".elm" $ toText mainFile of
+                  Just dir -> do
+                    createDirectoryIfMissing True (toString dir)
+                    let outputFileName = dir <> "/index.d.ts"
+                    writeFile (toString outputFileName) . toString . writeDocument $
+                      buildDocument (initFunction : additionalNamespaceMembers) portProperties
+                    pure $ pure (toString outputFileName)
+                  Nothing -> pure $ Failed "Can't create output directory"
+              Failed e -> pure $ Failed e
           Failed e -> pure $ Failed e
       Failed e -> pure $ Failed e
     err -> pure err
+
+getAdditionalNamespaceMembers :: [FilePath] -> [NeededCustomType] -> IO (Response Text [NamespaceMember])
+getAdditionalNamespaceMembers elmFiles xs = go xs xs []
+  where
+    go :: [NeededCustomType] -> [NeededCustomType] -> [NamespaceMember] -> IO (Response Text [NamespaceMember])
+    go ncts seenNcts acc = do
+      additionalNamespaceMemberResponses <- forM (sortNub ncts) (findType elmFiles)
+      let additionalNamespaceMembers = catSuccesses additionalNamespaceMemberResponses
+      if length additionalNamespaceMembers == length additionalNamespaceMemberResponses then do
+        let (newMembers, newNcts) = concat <$> unzip additionalNamespaceMembers
+        if all (`elem` seenNcts) newNcts then
+          pure . pure . sortNub $ acc <> newMembers
+        else
+          go newNcts (newNcts <> seenNcts) (acc <> newMembers)
+      else do
+        pure . Failed . mconcat . intersperse "\n" $ catFailures additionalNamespaceMemberResponses
+
 
 buildDocument :: [NamespaceMember] -> Members -> Document
 buildDocument additionalNamespaceMembers ports = Document

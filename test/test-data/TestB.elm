@@ -7,3 +7,9 @@ type alias Bar =
 
   bar : Bar
   }
+
+type alias I = Int
+
+type alias Baz =
+  { myI : I
+  }

@@ -22,7 +22,7 @@ module TIE.TypeScript
 
 import           Data.Text (replace)
 
-newtype Document = Document [Namespace] deriving (Eq, Show)
+newtype Document = Document [Namespace] deriving (Eq, Ord, Show)
 
 writeDocument :: Document -> Text
 writeDocument (Document xs) = replace "; }" " }" (onePerLine (Indented 0) (\i n -> "export " <> writeNamespace i n) xs) <> "\n"
@@ -42,10 +42,10 @@ nextIndentation (Indented indentation) = Indented $ indentation + 2
 nextIndentation Inline                 = Inline
 
 data Namespace = Namespace NamespaceName NamespaceMembers
-  deriving (Eq, Show)
+  deriving (Eq, Ord, Show)
 
 data Exported = Exported | Private
-  deriving (Eq, Show)
+  deriving (Eq, Ord, Show)
 
 type NamespaceMembers = [NamespaceMember]
 
@@ -54,13 +54,13 @@ data NamespaceMember
   | NMAlias AliasName TSType
   | NMInterface Interface
   | NMFunction Exported Function
-  deriving (Eq, Show)
+  deriving (Eq, Ord, Show)
 
 data Interface = Interface Exported InterfaceName Members
-  deriving (Eq, Show)
+  deriving (Eq, Ord, Show)
 
 data Function = Function FunctionName Arguments ReturnType
-  deriving (Eq, Show)
+  deriving (Eq, Ord, Show)
 
 type Members = [Member]
 
@@ -68,12 +68,12 @@ data Member
   = MPropertyGroup PropertyName Members
   | MProperty PropertyName TSType
   | MFunction Function
-  deriving (Eq, Show)
+  deriving (Eq, Ord, Show)
 
 type Arguments = [Argument]
 
 data Argument = Argument ArgumentName TSType
-  deriving (Eq, Show)
+  deriving (Eq, Ord, Show)
 
 type ReturnType = TSType
 
@@ -84,7 +84,7 @@ data TSType
   | TPrimitive PrimitiveName
   | TArray TSType
   | TUnion TSType TSType
-  deriving (Show)
+  deriving (Ord, Show)
 
 instance Eq TSType where
   TReference a == TReference b = a == b
@@ -117,21 +117,21 @@ data PrimitiveName
   | PUnknown
   | PNull
   | PVoid
-  deriving (Eq, Show)
+  deriving (Eq, Ord, Show)
 
-newtype NamespaceName = NamespaceName Text deriving (Eq, Show)
+newtype NamespaceName = NamespaceName Text deriving (Eq, Ord, Show)
 
-newtype InterfaceName = InterfaceName Text deriving (Eq, Show)
+newtype InterfaceName = InterfaceName Text deriving (Eq, Ord, Show)
 
-newtype ReferenceName = ReferenceName Text deriving (Eq, Show)
+newtype ReferenceName = ReferenceName Text deriving (Eq, Ord, Show)
 
-newtype AliasName = AliasName Text deriving (Eq, Show)
+newtype AliasName = AliasName Text deriving (Eq, Ord, Show)
 
-newtype PropertyName = PropertyName Text deriving (Eq, Show)
+newtype PropertyName = PropertyName Text deriving (Eq, Ord, Show)
 
-newtype FunctionName = FunctionName Text deriving (Eq, Show)
+newtype FunctionName = FunctionName Text deriving (Eq, Ord, Show)
 
-newtype ArgumentName = ArgumentName Text deriving (Eq, Show)
+newtype ArgumentName = ArgumentName Text deriving (Eq, Ord, Show)
 
 writeNamespace :: Indentation -> Namespace -> Text
 writeNamespace indentation (Namespace (NamespaceName name) members) =
@@ -160,7 +160,13 @@ writeNamespaceMember indentation (NMInterface i) = writeInterface indentation i
 writeNamespaceMember _ (NMFunction exported f)  = writeExported exported <> "function " <> writeFunction f
 
 writeAlias :: AliasName -> TSType -> Text
-writeAlias (AliasName name) aliasFor = "type " <> name <> " = " <> writeTSType aliasFor <> ";"
+writeAlias (AliasName name) aliasFor =
+  writeExported Exported
+  <> "type "
+  <> name
+  <> " = "
+  <> writeTSType aliasFor
+  <> ";"
 
 writeInterface :: Indentation -> Interface -> Text
 writeInterface indentation (Interface exported (InterfaceName name) members) =

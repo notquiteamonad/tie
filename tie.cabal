@@ -76,6 +76,7 @@ test-suite tie-test
       TIE.Elm.PortsSpec
       TIE.Elm.TypesSpec
       TIE.FSSpec
+      TIE.LibSpec
       TIE.ResponseSpec
       TIE.TypeScriptSpec
       Paths_tie

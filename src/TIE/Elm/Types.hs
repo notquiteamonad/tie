@@ -16,7 +16,7 @@ import           Data.Text.IO       (hGetLine)
 import           GHC.IO.Handle      (hIsEOF, hSetEncoding)
 import           System.IO          (mkTextEncoding)
 import           TIE.Elm.Expression (readNextExpression)
-import           TIE.Response       (Response (..), catResponses)
+import           TIE.Response       (Response (..), catFailures, catSuccesses)
 import           TIE.TypeScript     (AliasName (AliasName), Exported (Exported),
                                      Interface (..),
                                      InterfaceName (InterfaceName),
@@ -93,7 +93,7 @@ getCustomTypes (t:ts) acc =
     ElmArrayType a     -> getCustomTypes (a : ts) acc
     t1 `ETUnion` t2    -> getCustomTypes (t1 : t2 : ts) acc
 
-findType :: [FilePath] -> NeededCustomType -> IO (Response Text NamespaceMember)
+findType :: [FilePath] -> NeededCustomType -> IO (Response Text (NamespaceMember, [NeededCustomType]))
 findType paths nct@(NeededCustomType c) = do
   case nonEmpty paths of
     Just paths' ->
@@ -131,30 +131,42 @@ findCustomTypeInFile h recordName nestingLevel acc = do
               nextNestingLevel t = nestingLevel' + length (filter (== '{') s) - length (filter (== '}') s)
                 where s = toString t
 
-parseCustomType :: Text -> Text -> Response Text NamespaceMember
+parseCustomType :: Text -> Text -> Response Text (NamespaceMember, [NeededCustomType])
 parseCustomType name elmCode =
   if T.null $ T.filter (\c -> c == '{' || c == '}') elmCode then
     case elmTypeFromText . T.drop 1 $ T.dropWhile (/= '=') elmCode of
       Ok elmType ->
-        pure $ NMAlias (AliasName name) (elmTypeToTSType elmType)
+        pure (NMAlias (AliasName name) (elmTypeToTSType elmType), getCustomTypes [elmType] [])
       Failed e -> Failed e
-  else
-    NMInterface . Interface Exported (InterfaceName name) <$> recordMembers (removeOneBraceLayer elmCode)
+  else first (NMInterface . Interface Exported (InterfaceName name)) <$> recordMembers (removeOneBraceLayer elmCode)
 
 removeOneBraceLayer :: Text -> Text
 removeOneBraceLayer s =
           T.dropEnd 1 . T.drop 1 . T.reverse . T.dropWhile (/= '}') . T.reverse $ T.dropWhile (/= '{') s
 
-recordMembers :: Text -> Response Text Members
-recordMembers t = catResponses $ recordMember <$> splitIntoMembers 0 [] "" t
+recordMembers :: Text -> Response Text (Members, [NeededCustomType])
+recordMembers t = do
+  let responses = recordMember <$> splitIntoMembers 0 [] "" t
+  let failures = catFailures responses
+  if null failures then
+    Ok . foldr (\(member, ncts) (accMembers, accNcts) ->
+        (member : accMembers, accNcts <> ncts)
+      ) ([], []) $ catSuccesses responses
+  else
+    Failed . mconcat $ intersperse "\n" failures
 
-recordMember :: Text -> Response Text Member
+-- recordMembers t = bimap mconcat mconcat <$> recordMember <$> splitIntoMembers 0 [] "" t
+
+recordMember :: Text -> Response Text (Member, [NeededCustomType])
 recordMember m =
   let identifier = strip $ T.takeWhile (/= ':') m
       rest = T.drop 1 $ T.dropWhile (/= ':') m
   in case removeOneBraceLayer m of
-        "" -> MProperty (PropertyName identifier) . elmTypeToTSType <$> elmTypeFromText rest
-        _ -> MPropertyGroup (PropertyName identifier) <$> recordMembers (removeOneBraceLayer rest)
+        "" -> case elmTypeFromText rest of
+            Ok elmType ->
+              Ok (MProperty (PropertyName identifier) (elmTypeToTSType elmType), getCustomTypes [elmType] [])
+            Failed e -> Failed e
+        _ -> first (MPropertyGroup (PropertyName identifier)) <$> recordMembers (removeOneBraceLayer rest)
 
 splitIntoMembers :: Int -> [Text] -> Text -> Text -> [Text]
 splitIntoMembers innerLevel acc buf t =

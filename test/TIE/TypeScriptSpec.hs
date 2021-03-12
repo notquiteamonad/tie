@@ -82,7 +82,7 @@ testDocumentOutput =
   , "  }"
   , "  export function topLevelFunction1(): void;"
   , "  function topLevelFunction2(): string;"
-  , "  type MyNum = number;"
+  , "  export type MyNum = number;"
   , "}"
   , "export namespace TopLevelNS2 {"
   , "}"
