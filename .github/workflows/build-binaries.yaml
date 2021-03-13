@@ -1,0 +1,33 @@
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+name: Build binary releases
+jobs:
+  build:
+    name: Build binary releases
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, mac-latest]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: haskell/actions/setup@v1
+        with:
+          ghc-version: '8.10.4'
+          enable-stack: true
+          stack-version: 'latest'
+      - uses: actions/cache@v2.1.3
+        name: Cache ~/.stack
+        with:
+          path: ~/.stack
+          key: ${{ format( 'stack-tie-{0}', matrix.os) }}
+      - run: export CXXFLAGS="$CXXFLAGS -fPIC"
+      - run: stack build tie:exe:tie-exe --no-nix --system-ghc --copy-bins
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ format( 'tie-{0}', matrix.os) }}
+          path: ~/.local/bin/tie-exe
+      
