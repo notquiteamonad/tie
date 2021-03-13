@@ -3,6 +3,9 @@
 TIE is a tool for generating TypeScript definitions for elm projects such that
 complex data structures can be passed through flags and ports safely.
 
+**Note on Support:** Currently, TIE only supports Linux. If you're able to help add
+support for Windows or Mac, please check out #25 and #27.
+
 ## Motivation
 
 I had been using dillonkearns/elm-typescript-interop for this job before, but
@@ -23,7 +26,25 @@ Generates a TypeScript definition file for your Elm types, which includes:
 
 ## Installation
 
-// todo
+### Method 1: Download the binary
+
+A static binary for TIE is available on the [releases page](https://github.com/notquiteamonad/tie/releases).
+
+### Method 2: Install via npm
+
+This is convenient for using TIE as a project dependency, and essentially just runs
+the static binary. You can install it via the following command:
+
+```sh
+npm i --save-dev elm-tie
+# or
+yarn add -D elm-tie
+```
+
+And run it using `npx -p elm-tie tie` or `yarn tie`.
+
+**Note:** If using Yarn 2, you'll currently need to unplug the elm-tie dependency
+via `yarn unplug elm-tie`.
 
 ## Usage
 

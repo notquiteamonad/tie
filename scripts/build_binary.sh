@@ -17,3 +17,4 @@ docker create -it --name tie-temp tie:latest sh
 # Copy the executable from the container
 mkdir -p $projectDir/build
 docker cp tie-temp:/root/.local/bin/tie-exe $projectDir/build/tie
+cp $projectDir/build/tie $projectDir/npm/bin/tie

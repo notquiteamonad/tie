@@ -1,0 +1,22 @@
+{
+  "name": "elm-tie",
+  "version": "1.0.0",
+  "description": "Generate TypeScript definitions for Elm flag and port definitions",
+  "main": "binary.js",
+  "bin": {
+    "tie": "./tie.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/notquiteamonad/tie.git"
+  },
+  "author": "notquiteamonad",
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/notquiteamonad/tie/issues"
+  },
+  "homepage": "https://github.com/notquiteamonad/tie#readme",
+  "dependencies": {
+    "console.table": "^0.10.0"
+  }
+}
