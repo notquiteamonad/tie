@@ -1,8 +1,9 @@
 {
   "name": "elm-tie",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "Generate TypeScript definitions for Elm flag and port definitions",
   "main": "binary.js",
+  "readme": "README.md",
   "bin": {
     "tie": "./tie.js"
   },
