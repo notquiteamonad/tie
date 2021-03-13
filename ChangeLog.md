@@ -1,5 +1,9 @@
 # Changelog for TIE
 
-## Version 0.1.0.0
+## Version 1.0.1
+
+- Added README
+
+## Version 1.0.0
 
 - Initial release
