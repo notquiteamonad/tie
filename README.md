@@ -4,13 +4,15 @@ TIE is a tool for generating TypeScript definitions for elm projects such that
 complex data structures can be passed through flags and ports safely.
 
 **Note on Support:** Currently, TIE only supports Linux. If you're able to help add
-support for Windows or Mac, please check out #25 and #27.
+support for Windows or Mac, please check out [#25](https://github.com/notquiteamonad/tie/issues/25) and
+[#27](https://github.com/notquiteamonad/tie/issues/27).
 
 ## Motivation
 
-I had been using dillonkearns/elm-typescript-interop for this job before, but
-since this has been deprecated in favour of its successor [elm-ts-interop](https://elm-ts-interop.com)
-and since I'm doing this for hobby projects I don't have the money to spend on it.
+I had been using [dillonkearns/elm-typescript-interop](https://github.com/dillonkearns/elm-typescript-interop)
+for this job before, but this has since been deprecated in favour of its successor
+[elm-ts-interop](https://elm-ts-interop.com) and since I'm doing this for hobby projects I don't
+have the money to spend on it.
 
 If you want a more full-featured, premium product, I wholeheartedly recommend
 checking out [elm-ts-interop](https://elm-ts-interop.com) and supporting that project.
@@ -83,24 +85,27 @@ app.ports.receiveMessage.subscribe((data: number) => {
 
 The table below outlines TIE's support for different Elm types:
 
-|       Elm Type      | Generated TypeScript Type |                                    Notes                                   |
-|:-------------------:|:-------------------------:|:--------------------------------------------------------------------------:|
-| `Bool`              | `boolean`                 |                                                                            |
-| `Int`               | `number`                  | **Passing a float to this will typecheck in TS but cause an error in Elm** |
-| `Float`             | `number`                  |                                                                            |
-| `String`            | `string`                  |                                                                            |
-| `Maybe`             | `x \| void \| null`       | where `x` is the type which may be present                                 |
-| `List`              | `x[]`                     | where `x` is the type of which there may be many                           |
-| `Array`             | `x[]`                     | where `x` is the type of which there may be many                           |
-| tuples              | not currently supported   | Support is planned for a future release (issue #17)                        |
-| records             | `interface x {...}`       | where `x` is the name of the type and `...` are its constituent types      |
-| `Json.Decode.Value` | `unknown`                 |                                                                            |
-| `Json.Encode.Value` | `unknown`                 |                                                                            |
-| `Value`             | `unknown`                 | Assumed to be imported from Json.*                                         |
+| Elm Type            | Generated TypeScript Type | Notes                                                                                                  |
+|---------------------|---------------------------|--------------------------------------------------------------------------------------------------------|
+| `Bool`              | `boolean`                 |                                                                                                        |
+| `Int`               | `number`                  | **Passing a float to this will typecheck in TS but cause an error in Elm**                             |
+| `Float`             | `number`                  |                                                                                                        |
+| `String`            | `string`                  |                                                                                                        |
+| `Maybe`             | `x \| void \| null`       | where `x` is the type which may be present                                                             |
+| `List`              | `x[]`                     | where `x` is the type of which there may be many                                                       |
+| `Array`             | `x[]`                     | where `x` is the type of which there may be many                                                       |
+| tuples              | not currently supported   | Support is planned for a future release (issue [#17](https://github.com/notquiteamonad/tie/issues/17)) |
+| records             | `interface x {...}`       | where `x` is the name of the type and `...` are its constituent types                                  |
+| `Json.Decode.Value` | `unknown`                 |                                                                                                        |
+| `Json.Encode.Value` | `unknown`                 |                                                                                                        |
+| `Value`             | `unknown`                 | Assumed to be imported from Json.*                                                                     |
 
 ## Limitations
 
-* TIE does not support tuple types (yet) and behaviour for them may be unexpected (#17)
+* TIE is only available on Linux at present. ([#25](https://github.com/notquiteamonad/tie/issues/25) and
+  [#27](https://github.com/notquiteamonad/tie/issues/27))
+* TIE does not support tuple types (yet) and behaviour for them may be unexpected
+  ([#17](https://github.com/notquiteamonad/tie/issues/17))
 * TypeScript makes no distinction between integers and floats, which could lead to decoding
   errors in Elm for floats passed when integers were expected.
 
