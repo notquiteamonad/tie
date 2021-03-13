@@ -1,5 +1,9 @@
 # Changelog for TIE
 
+## Version 1.0.5
+
+- Minor documentation changes
+
 ## Version 1.0.4
 
 - Manually link GitHub autolinks in README
