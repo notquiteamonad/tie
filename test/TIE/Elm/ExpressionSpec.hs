@@ -12,6 +12,7 @@ spec =
       readNextExpression "String" `shouldBe` Just "String"
       readNextExpression "Int" `shouldBe` Just "Int"
       readNextExpression "MyType" `shouldBe` Just "MyType"
+      readNextExpression "(String) a b" `shouldBe` Just "String"
     it "can read a multi-word type, when bracketed" do
       readNextExpression "(Maybe String)" `shouldBe` Just "Maybe String"
       readNextExpression "(Result a b)" `shouldBe` Just "Result a b"
