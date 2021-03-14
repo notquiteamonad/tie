@@ -1,5 +1,10 @@
 {-# LANGUAGE LambdaCase #-}
 
+{-|
+Module: TIE.Elm.Init
+
+Extract flags from Elm code.
+-}
 module TIE.Elm.Init (generateInitFunction) where
 
 import qualified Data.Text          as T (isPrefixOf, null, strip)
@@ -22,6 +27,14 @@ import           TIE.TypeScript     (Argument (Argument),
                                      ReferenceName (ReferenceName),
                                      TSType (TInlineInterface, TPrimitive, TReference))
 
+{-|
+  Reads from the filepath given as Main.elm and uses `main`'s explicit type signature
+  to extract the type of the flags.
+
+  If successful, it returns the complete definition of the `init` function along with
+  a list of types which must be found elsewhere in the code which represent custom
+  aliases or record types.
+-}
 generateInitFunction :: FilePath -> IO (Response Text (NamespaceMember, [NeededCustomType]))
 generateInitFunction mainPath = do
   putStrLn $ "Reading main from " <> mainPath
@@ -47,6 +60,12 @@ generateInitFunction mainPath = do
         Nothing -> pure $ Failed "Could not read flags type from main definition"
     Failed e -> pure $ Failed e
 
+{-|
+  Reads from a handle to extract the type definition of main.
+
+  Reads from the first occurrence of "main :" to the occurrence of
+  either a blank line or "main ="
+-}
 buildMain :: Handle -> [Text] -> IO (Response Text Text)
 buildMain h acc = do
   enc <- mkTextEncoding "UTF-8//IGNORE"
