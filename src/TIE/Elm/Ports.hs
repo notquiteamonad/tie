@@ -48,7 +48,7 @@ generatePortProperties paths = getPortsFromPaths paths >>= \case
   Ok ports ->
     pure $ pure
       ( toMember <$> ports
-      , getCustomTypes (elmType <$> ports) []
+      , getCustomTypes (elmType <$> ports)
       )
   Failed e -> pure $ Failed e
 

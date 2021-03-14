@@ -50,7 +50,7 @@ generateInitFunction mainPath = do
                     : flagsType
                   ]
                   (TReference $ ReferenceName "Elm.Main.App")
-              , getCustomTypes [flags] []
+              , getCustomTypes [flags]
               )
               where flagsType
                       | flags == ElmPrimitiveType (TPrimitive PNull) = []
