@@ -1,10 +1,26 @@
+{-|
+Module: TIE.Elm.Internal.Expression
+
+A collection of functions used internally by TIE.Elm.Expression.
+-}
 module TIE.Elm.Internal.Expression (bracketedExpression) where
 
 import           Data.Text as T (drop, dropWhile, filter, length, null, take,
                                  takeWhile)
 
--- NOTE: This expects a mismatched number of brackets, specifically
--- one more closing than opening.
+
+{-|
+  Extracts the whole expression within a pair of brackets, assuming
+  the opening bracket has already been removed.
+
+  For example:
+
+  >>> bracketedExpression ("Maybe String)")
+  Just "Maybe String"
+
+  NOTE: This expects a mismatched number of brackets, specifically
+  one more closing than opening.
+-}
 bracketedExpression :: Text -> Maybe Text
 bracketedExpression t =
   if T.length (T.filter (== ')') t) == 1 + T.length (T.filter (== '(') t) then
