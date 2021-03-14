@@ -1,29 +1,43 @@
+{-|
+Module: TIE.TypeScript
+
+TypeScript type constructs for writing to a TypeScript definition file.
+-}
 module TIE.TypeScript
-  ( AliasName (..)
-  , Argument (..)
-  , ArgumentName (..)
-  , Document (..)
+  ( -- * Top-Level Access for Writing Documents
+    Document (..)
+  , writeDocument
+    -- * Representations of TypeScript Types
+  , Namespace (..)
   , Exported (..)
-  , Function (..)
-  , FunctionName (..)
+  , NamespaceMembers
+  , NamespaceMember (..)
   , Interface (..)
-  , InterfaceName (..)
+  , Function (..)
   , Members
   , Member (..)
-  , Namespace (..)
-  , NamespaceMember (..)
-  , NamespaceName (..)
-  , PrimitiveName (..)
-  , PropertyName (..)
-  , ReferenceName (..)
+  , Arguments
+  , Argument (..)
+  , ReturnType
+  -- * Atom-Level TypeScript Types
   , TSType (..)
-  , writeDocument
+  -- ** Name Wrappers
+  , PrimitiveName (..)
+  , NamespaceName (..)
+  , InterfaceName (..)
+  , ReferenceName (..)
+  , AliasName (..)
+  , PropertyName (..)
+  , FunctionName (..)
+  , ArgumentName (..)
   ) where
 
 import           Data.Text (replace)
 
+-- |A top-level construct which contains a complete TypeScript definition file.
 newtype Document = Document [Namespace] deriving (Eq, Ord, Show)
 
+-- |Converts a `Document` into `Text` to be written to a "*.d.ts" file.
 writeDocument :: Document -> Text
 writeDocument (Document xs) =
   "// This file was generated automatically by TIE (TypeScript Interoperator for Elm).\n\n"
@@ -43,49 +57,64 @@ nextIndentation :: Indentation -> Indentation
 nextIndentation (Indented indentation) = Indented $ indentation + 2
 nextIndentation Inline                 = Inline
 
+-- |A TypeScript <https://www.typescriptlang.org/docs/handbook/namespaces.html Namespace>
 data Namespace = Namespace NamespaceName NamespaceMembers
   deriving (Eq, Ord, Show)
 
+-- |Determined whether the member should be prefixed with the
+-- <https://www.typescriptlang.org/docs/handbook/modules.html#export export> keyword
 data Exported = Exported | Private
   deriving (Eq, Ord, Show)
 
+-- |A list of `NamespaceMember`s
 type NamespaceMembers = [NamespaceMember]
 
+-- |A valid child of a `Namespace`
 data NamespaceMember
-  = NMNamespace Exported Namespace
-  | NMAlias AliasName TSType
-  | NMInterface Interface
-  | NMFunction Exported Function
+  = NMNamespace Exported Namespace -- ^An inner `Namespace`
+  | NMAlias AliasName TSType -- ^A <https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#type-aliases type alias>
+  | NMInterface Interface -- ^An `Interface` contained within this `Namespace`
+  | NMFunction Exported Function -- ^A `Namespace`-level `Function`
   deriving (Eq, Ord, Show)
 
+-- |A TypeScript <https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#interfaces interface>
 data Interface = Interface Exported InterfaceName Members
   deriving (Eq, Ord, Show)
 
+-- |A named <https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#functions function> type
 data Function = Function FunctionName Arguments ReturnType
   deriving (Eq, Ord, Show)
 
+-- |A list of `Member`s
 type Members = [Member]
 
+-- |A valid child of an `Interface` or `MPropertyGroup`
 data Member
-  = MPropertyGroup PropertyName Members
-  | MProperty PropertyName TSType
-  | MFunction Function
+  = MPropertyGroup PropertyName Members -- ^A named group of `Members`
+  | MProperty PropertyName TSType -- ^A property of a particular `TSType`
+  | MFunction Function -- ^A contained `Function`
   deriving (Eq, Ord, Show)
 
+-- |A list of `Argument`s
 type Arguments = [Argument]
 
+-- |An <https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#functions argument>
+-- (or parameter) to a `Function`
 data Argument = Argument ArgumentName TSType
   deriving (Eq, Ord, Show)
 
+-- |The <https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#functions return type> of
+-- a `Function`.
 type ReturnType = TSType
 
+-- |An atom-level TypeScript type
 data TSType
-  = TReference ReferenceName
-  | TInlineInterface Members
-  | TFunction Arguments ReturnType
-  | TPrimitive PrimitiveName
-  | TArray TSType
-  | TUnion TSType TSType
+  = TReference ReferenceName -- ^A reference to another type such as an `NMAlias` or `Interface`
+  | TInlineInterface Members -- ^A type used for defining interface types without naming them
+  | TFunction Arguments ReturnType -- ^A function type which specifies its `Arguments` and `ReturnType`
+  | TPrimitive PrimitiveName -- ^A primitive type represented by `PrimitiveName`
+  | TArray TSType -- ^An <https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#arrays array type>
+  | TUnion TSType TSType -- ^A <https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#union-types union between two types>
   deriving (Ord, Show)
 
 instance Eq TSType where
@@ -112,27 +141,41 @@ instance Semigroup TSType where
     | otherwise = lhs `TUnion` rhs
   a <> b = a `TUnion` b
 
+{-|
+  A representation of
+  <https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#the-primitives-string-number-and-boolean TypeScript primitive types>
+  along with the special types of <https://www.typescriptlang.org/docs/handbook/2/functions.html#unknown unknown>,
+  <https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#null-and-undefined null>, and
+  <https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#null-and-undefined void>.
+-}
 data PrimitiveName
-  = PString
-  | PNumber
-  | PBoolean
-  | PUnknown
-  | PNull
-  | PVoid
+  = PString -- ^ Represents TypeScript's "string"
+  | PNumber -- ^ Represents TypeScript's "number"
+  | PBoolean -- ^ Represents TypeScript's "boolean"
+  | PUnknown -- ^ Represents TypeScript's "unknown"
+  | PNull -- ^ Represents TypeScript's "null"
+  | PVoid -- ^ Represents TypeScript's "void"
   deriving (Eq, Ord, Show)
 
+-- |A wrapper for the name of a `Namespace`
 newtype NamespaceName = NamespaceName Text deriving (Eq, Ord, Show)
 
+-- |A wrapper for the name of an `Interface`
 newtype InterfaceName = InterfaceName Text deriving (Eq, Ord, Show)
 
+-- |A wrapper for the name of a reference to an `NMAlias` or `Interface`
 newtype ReferenceName = ReferenceName Text deriving (Eq, Ord, Show)
 
+-- |A wrapper for the name of an `NMAlias`
 newtype AliasName = AliasName Text deriving (Eq, Ord, Show)
 
+-- |A wrapper for the name of an `MProperty` or `MPropertyGroup`
 newtype PropertyName = PropertyName Text deriving (Eq, Ord, Show)
 
+-- |A wrapper for the name of a `Function`
 newtype FunctionName = FunctionName Text deriving (Eq, Ord, Show)
 
+-- |A wrapper for the name of an `Argument` of a `Function`
 newtype ArgumentName = ArgumentName Text deriving (Eq, Ord, Show)
 
 writeNamespace :: Indentation -> Namespace -> Text
