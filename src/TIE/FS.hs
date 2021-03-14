@@ -1,3 +1,8 @@
+{-|
+Module: TIE.FS
+
+FileSystem operations for TIE
+-}
 module TIE.FS
   ( getAllElmFilesIn
   , getMainElmFile
@@ -11,8 +16,7 @@ import           System.IO.Error        (catchIOError)
 import           System.Posix.Internals (fileType)
 import           TIE.Response           (Response (..))
 
-{-| Gets a list of FilePaths that end in ".elm" under the given directory.
--}
+-- | Gets a list of FilePaths that end in ".elm" under the given directory.
 getAllElmFilesIn :: FilePath -> IO [FilePath]
 getAllElmFilesIn topDir = do
   mFileTypeTuple <- catchIOError (Just <$> fileTypeTuple topDir) (const $ pure Nothing)
@@ -35,6 +39,7 @@ fileTypeTuple f = do
   t <- fileType f
   pure (f, t)
 
+-- | Given a list of filepaths, gets the first match which ends in "Main.elm".
 getMainElmFile :: [FilePath] -> Response Text FilePath
 getMainElmFile paths =
   case viaNonEmpty head $ filter (\path -> "Main.elm" `isSuffixOf` toText path) paths of
