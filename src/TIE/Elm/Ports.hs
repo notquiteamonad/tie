@@ -2,6 +2,11 @@
 {-# LANGUAGE LambdaCase     #-}
 {-# LANGUAGE NamedFieldPuns #-}
 
+{-|
+Module: TIE.Elm.Ports
+
+Extracts port definitions from Elm code.
+-}
 module TIE.Elm.Ports (generatePortProperties) where
 
 import qualified Data.Text          as T (dropEnd, dropWhileEnd, isInfixOf,
@@ -33,6 +38,11 @@ data PortDirection = In | Out deriving (Eq, Show)
 
 newtype PortName = PortName {unPortName :: Text} deriving (Eq, Show)
 
+{-|
+  Gets a PropertyGroup for each port containing the appropriate function for the
+  `PortDirection`. Also gets a list of custom types which must be declared to make
+  the declaration complete.
+-}
 generatePortProperties :: [FilePath] -> IO (Response Text (Members, [NeededCustomType]))
 generatePortProperties paths = getPortsFromPaths paths >>= \case
   Ok ports ->
@@ -56,9 +66,21 @@ toMember Port {direction, name, elmType} =
   in
   MPropertyGroup (PropertyName $ unPortName name) [ MFunction . Function functionName args $ TPrimitive PVoid ]
 
+{-|
+  Returns a TypeScript Function definition for the callback parameter of an Out (Elm -> TypeScript) port.
+-}
 callbackTypeFor :: ElmType -> TSType
 callbackTypeFor t = TFunction [Argument (ArgumentName "data") $ elmTypeToTSType t] $ TPrimitive PVoid
 
+{-|
+  Given a file handle, returns a list of the port definitions in the module.
+
+  It considers the beginning of a port definition to be the word "port" (except
+  where this is part of the expression "port module")
+
+  It considers a port definition to have ended when it reaches a blank line
+  or the end of the file.
+-}
 getPortsFromModule :: Handle -> Bool -> [Text] -> IO [Text]
 getPortsFromModule h knownPortModule acc = do
   enc <- mkTextEncoding "UTF-8//IGNORE"
