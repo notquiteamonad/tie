@@ -1,6 +1,11 @@
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE LambdaCase     #-}
 
+{-|
+Module: TIE.Lib
+
+The entrypoint for TIE executables.
+-}
 module TIE.Lib
     ( Response(..)
     , interoperate
@@ -24,8 +29,10 @@ import           TIE.TypeScript   (Document (Document),
                                    NamespaceName (NamespaceName),
                                    PropertyName (PropertyName), writeDocument)
 
-{-| Attempts to generate a TS definition file from the Elm files in the directory provided.
-    Succeeds with `Ok PATH_TO_OUTPUT_DEFINITIONS` or fails with `Failed ERROR_MESSAGE`
+{-|
+  Attempts to generate a TS definition file from the Elm files in the directory provided.
+
+  Succeeds with "`Ok` PATH_TO_OUTPUT_DEFINITIONS" or fails with "`Failed` ERROR_MESSAGE"
 -}
 interoperate :: FilePath -> IO (Response Text FilePath)
 interoperate dirname = do
@@ -50,6 +57,7 @@ interoperate dirname = do
       Failed e -> pure $ Failed e
     err -> pure err
 
+-- |Recursively calls `findType` until all needed custom types are found.
 getAdditionalNamespaceMembers :: [FilePath] -> [NeededCustomType] -> IO (Response Text [NamespaceMember])
 getAdditionalNamespaceMembers elmFiles xs = go xs xs []
   where
