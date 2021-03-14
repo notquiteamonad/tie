@@ -2,6 +2,7 @@ module TIE.Elm.TypesSpec (spec) where
 
 import qualified Data.Text             as T
 import           System.FilePath       ((</>))
+import           TIE.Elm.Expression    (readNextExpression)
 import           TIE.Elm.Types         (ElmType (CustomType, ElmArrayType, ElmPrimitiveType),
                                         NeededCustomType (NeededCustomType),
                                         elmTypeFromText, findType)
@@ -84,7 +85,7 @@ spec = do
         let t = toText (x :: String)
             l = elmTypeFromText ("List " <> t)
             a = elmTypeFromText ("Array " <> t)
-        in if not . null $ words t then
+        in if isJust $ readNextExpression t then
           case (l, a) of
             (Ok l', Ok a') -> a' `shouldBe` l'
             (Failed l', Failed a') ->
