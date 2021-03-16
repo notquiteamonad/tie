@@ -35,6 +35,7 @@ library
       TIE.Elm.Types
       TIE.FS
       TIE.Lib
+      TIE.Override
       TIE.Response
       TIE.TypeScript
   other-modules:

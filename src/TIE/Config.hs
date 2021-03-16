@@ -1,6 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 
-module TIE.Config (getConfig, Config(cnfOverrides), Override(ovrPath, ovrType)) where
+module TIE.Config (getConfig, Config(cfgOverrides), Override(ovrPath, ovrType)) where
 
 import qualified Data.Text       as T
 import           System.IO.Error (catchIOError)
@@ -38,7 +38,7 @@ getConfig =
 
 
 newtype Config = Config
-  { cnfOverrides :: [Override]
+  { cfgOverrides :: [Override]
   } deriving (Eq, Show)
 
 defaultConfig :: Config
@@ -46,7 +46,7 @@ defaultConfig = Config []
 
 configCodec :: TomlCodec Config
 configCodec = Config . sortNub
-  <$> (Toml.list overrideCodec "override" .= cnfOverrides)
+  <$> (Toml.list overrideCodec "override" .= cfgOverrides)
 
 data Override = Override
   { ovrPath :: NonEmpty Text

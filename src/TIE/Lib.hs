@@ -15,11 +15,12 @@ module TIE.Lib
 import           Data.Text        (stripSuffix)
 import           System.Directory (createDirectoryIfMissing)
 import           System.FilePath  ((</>))
-import           TIE.Config       (getConfig)
+import           TIE.Config       (cfgOverrides, getConfig)
 import           TIE.Elm.Init     (generateInitFunction)
 import           TIE.Elm.Ports    (generatePortProperties)
 import           TIE.Elm.Types    (NeededCustomType, findType)
 import           TIE.FS           (getAllElmFilesIn, getMainElmFile)
+import           TIE.Override     (overrideMembers)
 import           TIE.Response     (Response (..), catFailures, catSuccesses)
 import           TIE.TypeScript   (Document (Document),
                                    Exported (Exported, Private),
@@ -40,7 +41,7 @@ type Warnings = [Text]
 -}
 interoperate :: FilePath -> IO (Response Text (FilePath, Warnings))
 interoperate dirname = getConfig >>= \case
-  Ok (_, defaultConfigWarning) -> do
+  Ok (config, defaultConfigWarning) -> do
     elmFiles <- getAllElmFilesIn dirname
     case getMainElmFile elmFiles of
       Ok mainFile -> generateInitFunction mainFile >>= \case
@@ -49,13 +50,17 @@ interoperate dirname = getConfig >>= \case
               let neededCustomTypes = neededCustomFlagTypes <> neededCustomPortTypes
               getAdditionalNamespaceMembers elmFiles neededCustomTypes >>= \case
                 Ok additionalNamespaceMembers ->
+                  let (overriddenAdditionalNamespaceMembers, overrideWarnings, overrideMessages)
+                        = overrideMembers additionalNamespaceMembers (cfgOverrides config)
+                  in
+                  forM_ overrideMessages putTextLn >>
                   case stripSuffix ".elm" $ toText mainFile of
                     Just dir -> do
                       createDirectoryIfMissing True (toString dir)
                       let outputFileName = toString dir </> "index.d.ts"
                       writeFile outputFileName . toString . writeDocument $
-                        buildDocument (initFunction : additionalNamespaceMembers) portProperties
-                      pure $ pure (toString outputFileName, catMaybes [defaultConfigWarning])
+                        buildDocument (initFunction : overriddenAdditionalNamespaceMembers) portProperties
+                      pure $ pure (toString outputFileName, catMaybes [defaultConfigWarning] <> overrideWarnings)
                     Nothing -> pure $ Failed "Can't create output directory"
                 Failed e -> pure $ Failed e
             Failed e -> pure $ Failed e
@@ -79,7 +84,6 @@ getAdditionalNamespaceMembers elmFiles xs = go xs xs []
           go newNcts (newNcts <> seenNcts) (acc <> newMembers)
       else do
         pure . Failed . mconcat . intersperse "\n" $ catFailures additionalNamespaceMemberResponses
-
 
 buildDocument :: [NamespaceMember] -> Members -> Document
 buildDocument additionalNamespaceMembers ports = Document
