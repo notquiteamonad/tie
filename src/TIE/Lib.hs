@@ -8,12 +8,14 @@ The entrypoint for TIE executables.
 -}
 module TIE.Lib
     ( Response(..)
+    , Warnings
     , interoperate
     ) where
 
 import           Data.Text        (stripSuffix)
 import           System.Directory (createDirectoryIfMissing)
 import           System.FilePath  ((</>))
+import           TIE.Config       (getConfig)
 import           TIE.Elm.Init     (generateInitFunction)
 import           TIE.Elm.Ports    (generatePortProperties)
 import           TIE.Elm.Types    (NeededCustomType, findType)
@@ -29,33 +31,37 @@ import           TIE.TypeScript   (Document (Document),
                                    NamespaceName (NamespaceName),
                                    PropertyName (PropertyName), writeDocument)
 
+type Warnings = [Text]
+
 {-|
   Attempts to generate a TS definition file from the Elm files in the directory provided.
 
-  Succeeds with "`Ok` PATH_TO_OUTPUT_DEFINITIONS" or fails with "`Failed` ERROR_MESSAGE"
+  Succeeds with "`Ok` (PATH_TO_OUTPUT_DEFINITIONS, WARNINGS)" or fails with "`Failed` ERROR_MESSAGE"
 -}
-interoperate :: FilePath -> IO (Response Text FilePath)
-interoperate dirname = do
-  elmFiles <- getAllElmFilesIn dirname
-  case getMainElmFile elmFiles of
-    Ok mainFile -> generateInitFunction mainFile >>= \case
-      Ok (initFunction, neededCustomFlagTypes) -> generatePortProperties elmFiles >>= \case
-          Ok (portProperties, neededCustomPortTypes) -> do
-            let neededCustomTypes = neededCustomFlagTypes <> neededCustomPortTypes
-            getAdditionalNamespaceMembers elmFiles neededCustomTypes >>= \case
-              Ok additionalNamespaceMembers ->
-                case stripSuffix ".elm" $ toText mainFile of
-                  Just dir -> do
-                    createDirectoryIfMissing True (toString dir)
-                    let outputFileName = toString dir </> "index.d.ts"
-                    writeFile outputFileName . toString . writeDocument $
-                      buildDocument (initFunction : additionalNamespaceMembers) portProperties
-                    pure $ pure (toString outputFileName)
-                  Nothing -> pure $ Failed "Can't create output directory"
-              Failed e -> pure $ Failed e
-          Failed e -> pure $ Failed e
+interoperate :: FilePath -> IO (Response Text (FilePath, Warnings))
+interoperate dirname = getConfig >>= \case
+  Ok (_, defaultConfigWarning) -> do
+    elmFiles <- getAllElmFilesIn dirname
+    case getMainElmFile elmFiles of
+      Ok mainFile -> generateInitFunction mainFile >>= \case
+        Ok (initFunction, neededCustomFlagTypes) -> generatePortProperties elmFiles >>= \case
+            Ok (portProperties, neededCustomPortTypes) -> do
+              let neededCustomTypes = neededCustomFlagTypes <> neededCustomPortTypes
+              getAdditionalNamespaceMembers elmFiles neededCustomTypes >>= \case
+                Ok additionalNamespaceMembers ->
+                  case stripSuffix ".elm" $ toText mainFile of
+                    Just dir -> do
+                      createDirectoryIfMissing True (toString dir)
+                      let outputFileName = toString dir </> "index.d.ts"
+                      writeFile outputFileName . toString . writeDocument $
+                        buildDocument (initFunction : additionalNamespaceMembers) portProperties
+                      pure $ pure (toString outputFileName, catMaybes [defaultConfigWarning])
+                    Nothing -> pure $ Failed "Can't create output directory"
+                Failed e -> pure $ Failed e
+            Failed e -> pure $ Failed e
+        Failed e -> pure $ Failed e
       Failed e -> pure $ Failed e
-    err -> pure err
+  Failed e -> pure $ Failed e
 
 -- |Recursively calls `findType` until all needed custom types are found.
 getAdditionalNamespaceMembers :: [FilePath] -> [NeededCustomType] -> IO (Response Text [NamespaceMember])
