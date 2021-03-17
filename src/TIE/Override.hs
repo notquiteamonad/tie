@@ -1,5 +1,10 @@
 {-# LANGUAGE LambdaCase #-}
 
+{-|
+Module: TIE.Override
+
+Contains the functions for user-defined overriding of generated types.
+-}
 module TIE.Override (overrideMembers) where
 
 import           TIE.Config     (Override (..))
@@ -11,6 +16,14 @@ import           TIE.TypeScript (AliasName (AliasName), Interface (Interface),
 type Warnings = [Text]
 type OverrideMessages = [Text]
 
+{-|
+  Returns a modified array of namespace members, with any matching overrides applied to their types.
+
+  For each successful override performed, an OverrideMessage will also be emitted which can be printed
+  to the screen to inform the user that the override was successful.
+
+  For each override which couldn't be performed, a warning will be emitted to explain why it wasn't successful.
+-}
 overrideMembers :: [NamespaceMember] -> [Override] -> ([NamespaceMember], Warnings, OverrideMessages)
 overrideMembers = go [] []
   where

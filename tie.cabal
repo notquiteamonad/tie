@@ -87,6 +87,7 @@ test-suite tie-test
       TIE.Elm.TypesSpec
       TIE.FSSpec
       TIE.LibSpec
+      TIE.OverrideSpec
       TIE.ResponseSpec
       TIE.TypeScriptSpec
       Paths_tie

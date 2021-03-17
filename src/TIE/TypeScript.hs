@@ -125,6 +125,7 @@ instance Eq TSType where
   TPrimitive a == TPrimitive b = a == b
   TArray a == TArray b = a == b
   TUnion a b == TUnion c d = (a == c && b == d) || (a == d && b == c)
+  TLiteral a == TLiteral b = a == b
   _ == _ = False
 
 instance Semigroup TSType where

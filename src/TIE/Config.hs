@@ -1,6 +1,11 @@
 {-# LANGUAGE LambdaCase #-}
 
-module TIE.Config (getConfig, Config(cfgOverrides), Override(ovrPath, ovrType)) where
+{-|
+Module: TIE.Config
+
+Configuration for the TIE utility.
+-}
+module TIE.Config (getConfig, Config(cfgOverrides), Override(Override, ovrPath, ovrType)) where
 
 import qualified Data.Text       as T
 import           System.IO.Error (catchIOError)
@@ -9,6 +14,15 @@ import           TIE.TypeScript  (TSType (TLiteral))
 import           Toml            (TomlCodec, (.=))
 import qualified Toml
 
+{-|
+  Returns the config specified in .TIE.toml or the default config if that file is nor present.
+
+  If the default config was returned due to the file not being present or not containing any
+  config properties, a warning is also emitted in the `Ok` response.
+
+  If the confg file can't be parsed or has invalid config in it, a `Failed` response is produced
+  with a user-readable message.
+-}
 getConfig :: IO (Response Text (Config, Maybe Text))
 getConfig =
   catchIOError
@@ -37,8 +51,9 @@ getConfig =
         "An error occurred when parsing your TIE config:\n" <> Toml.prettyTomlDecodeError e
 
 
+-- |Configuration data for the TIE utility
 newtype Config = Config
-  { cfgOverrides :: [Override]
+  { cfgOverrides :: [Override] -- ^the `Override`s to be applied to the generated type definitions
   } deriving (Eq, Show)
 
 defaultConfig :: Config
@@ -48,9 +63,12 @@ configCodec :: TomlCodec Config
 configCodec = Config . sortNub
   <$> (Toml.list overrideCodec "override" .= cfgOverrides)
 
+-- |A declaration that a generated type should be overriden with a custom type
 data Override = Override
   { ovrPath :: NonEmpty Text
+    -- ^The path to the item to be overriden. Should have length 1 for an alias or 2 for an interface's property.
   , ovrType :: TSType
+    -- ^The user-defined replacement type to be used in the type definition file instead of the TIE-generated type.
   } deriving (Show)
 
 instance Eq Override where

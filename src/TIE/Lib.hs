@@ -32,6 +32,7 @@ import           TIE.TypeScript   (Document (Document),
                                    NamespaceName (NamespaceName),
                                    PropertyName (PropertyName), writeDocument)
 
+-- |A list of warnings to be displayed to the user.
 type Warnings = [Text]
 
 {-|
