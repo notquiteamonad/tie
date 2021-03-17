@@ -1,5 +1,9 @@
 # Changelog for TIE
 
+## Version 1.1.0
+
+- Add the ability to [override generated types](https://github.com/notquiteamonad/tie/blob/main/vault/Configuration.md)
+
 ## Version 1.0.5
 
 - Minor documentation changes
