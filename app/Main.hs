@@ -81,5 +81,3 @@ printResponse = \case
 printWarnings :: Warnings -> [Chunk]
 printWarnings = foldr printWarning []
   where printWarning w acc = (fore yellow . bold $ chunk "Warning: ") : fore yellow (chunk $ w <> "\n") : acc
-
-  -- where warning w = (fore yellow . bold $ chunk "Warning: ", fore yellow $ chunk w)
