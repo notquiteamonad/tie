@@ -73,7 +73,7 @@ Overrides can be configured using override tables in your configuration file, wh
 # You can override the properties of record types like this:
 [[override]]
 property = "StatusMessagePort.variant"
-type = "\"success\" | \"warning\" | \"error\""
+type = '"success" | "warning" | "error"'
 
 # You can override type aliases like this
 [[override]]
