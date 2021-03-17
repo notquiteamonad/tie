@@ -114,7 +114,7 @@ elmTypeToTSType (ElmArrayType t)     = TArray $ elmTypeToTSType t
 elmTypeToTSType (t `ETUnion` u)      = elmTypeToTSType t <> elmTypeToTSType u
 
 {-|
-  Recursively searches the list of `ElmType` values to get a list of `NeededCustomTypes`
+  Recursively searches the list of `ElmType` values to get a list of `NeededCustomType`s
   required to ensure all types referenced are defined.
 -}
 getCustomTypes :: [ElmType] -> [NeededCustomType]

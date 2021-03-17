@@ -14,7 +14,7 @@ import           TIE.TypeScript (AliasName (AliasName), Argument (Argument),
                                  PrimitiveName (PBoolean, PNull, PNumber, PString, PUnknown, PVoid),
                                  PropertyName (PropertyName),
                                  ReferenceName (ReferenceName),
-                                 TSType (TArray, TFunction, TInlineInterface, TPrimitive, TReference),
+                                 TSType (TArray, TFunction, TInlineInterface, TLiteral, TPrimitive, TReference),
                                  writeDocument)
 import           Test.Hspec     (Spec, it, shouldBe)
 
@@ -51,7 +51,7 @@ testDocument = Document
                         [ Argument ( ArgumentName "s" ) $ TPrimitive PNull <> TPrimitive PVoid <> TPrimitive PNull ]
                         ((TPrimitive PNull <> TPrimitive PNull) <> (TPrimitive PNull <> TPrimitive PNull))
                     ]
-                    (TPrimitive PVoid)
+                    (TLiteral "wow@")
               ]
           ]
       , NMInterface $ Interface Private (InterfaceName "NSInterface2") []
@@ -77,7 +77,7 @@ testDocumentOutput =
   , "      };"
   , "      pInterface: Some.Package.Interface;"
   , "      foo(bar: (string[] | number[])[], baz: unknown, additionalData: { isGoodData: boolean } | string | null, yetAnotherParam: S): void;"
-  , "      hof(f: (s: void | null) => null): void;"
+  , "      hof(f: (s: void | null) => null): wow@;"
   , "    };"
   , "  }"
   , "  interface NSInterface2 {"

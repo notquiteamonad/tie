@@ -12,9 +12,9 @@ import qualified System.Console.GetOpt as GetOpt (OptDescr (Option))
 import           System.Environment    (getArgs)
 import           System.FSNotify       (eventPath, watchTree, withManager)
 import           System.IO             (hFlush)
-import           TIE.Lib               (Response (..), interoperate)
-import           Text.Colour           (bold, chunk, fore, green, putChunks,
-                                        red, underline)
+import           TIE.Lib               (Response (..), Warnings, interoperate)
+import           Text.Colour           (Chunk, bold, chunk, fore, green,
+                                        putChunks, red, underline, yellow)
 
 main :: IO ()
 main = do
@@ -66,10 +66,10 @@ showUsage = putChunks
     , chunk "                 definitions every time a change occurs\n\n"
     ]
 
-printResponse :: Response Text FilePath -> IO ()
+printResponse :: Response Text (FilePath, Warnings) -> IO ()
 printResponse = \case
-  Ok path ->
-    putChunks
+  Ok (path, warnings) ->
+    putChunks $ printWarnings warnings <>
       [ fore green . bold $ chunk "Done! You can see the generated type definitions at "
       , fore green . underline . chunk $ toText path <> "\n"
       ]
@@ -77,3 +77,7 @@ printResponse = \case
     putChunks
       ((fore red . bold $ chunk "Some errors were encountered, so new TypeScript definitions were not generated:\n\n")
       : ((\l -> fore red . chunk $ "  - " <> l <> "\n") <$> lines err))
+
+printWarnings :: Warnings -> [Chunk]
+printWarnings = foldr printWarning []
+  where printWarning w acc = (fore yellow . bold $ chunk "Warning: ") : fore yellow (chunk $ w <> "\n") : acc

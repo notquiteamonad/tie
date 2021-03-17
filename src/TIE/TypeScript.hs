@@ -115,6 +115,7 @@ data TSType
   | TPrimitive PrimitiveName -- ^A primitive type represented by `PrimitiveName`
   | TArray TSType -- ^An <https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#arrays array type>
   | TUnion TSType TSType -- ^A <https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#union-types union between two types>
+  | TLiteral Text -- ^A literal text representation of a TypeScript type
   deriving (Ord, Show)
 
 instance Eq TSType where
@@ -124,6 +125,7 @@ instance Eq TSType where
   TPrimitive a == TPrimitive b = a == b
   TArray a == TArray b = a == b
   TUnion a b == TUnion c d = (a == c && b == d) || (a == d && b == c)
+  TLiteral a == TLiteral b = a == b
   _ == _ = False
 
 instance Semigroup TSType where
@@ -247,6 +249,7 @@ writeTSType (TPrimitive p)                 = writePrimitiveType p
 writeTSType (TArray (t1 `TUnion` t2))                 = "(" <> writeTSType t1 <> "[] | " <> writeTSType t2 <> "[])"
 writeTSType (TArray t)                 = writeTSType t <> "[]"
 writeTSType (a `TUnion` b) = writeTSType a <> " | " <> writeTSType b
+writeTSType (TLiteral l) = l
 
 writeInlineInterface :: Members -> Text
 writeInlineInterface members =
