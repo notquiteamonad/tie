@@ -5,6 +5,9 @@ import Html exposing (Html, text)
 
 type alias S = String
 
+type alias SOverTwoLines =
+  String
+
 main : Program S () ()
 main = Browser.element
           { init = \_ -> ()

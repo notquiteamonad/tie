@@ -16,7 +16,8 @@ module TIE.Elm.Types
 
 import           Data.Text          (replace, strip, stripPrefix)
 import qualified Data.Text          as T (drop, dropEnd, dropWhile, filter,
-                                          head, null, reverse, take, takeWhile)
+                                          find, head, null, reverse, take,
+                                          takeWhile)
 import           Data.Text.IO       (hGetLine)
 import           GHC.IO.Handle      (hIsEOF, hSetEncoding)
 import           System.IO          (mkTextEncoding)
@@ -171,14 +172,19 @@ findCustomTypeInFile h identifierToFind nestingLevel acc = do
           l <- hGetLine h
           if null acc' then
             if ["type", "alias", identifierToFind'] == (take 3 . words . strip) l then
-              findCustomTypeInFile h identifierToFind' (nextNestingLevel l - 1) $ l : acc'
-            else findCustomTypeInFile h identifierToFind' nestingLevel' acc'
+              go identifierToFind' (nextNestingLevel l - 1) $ l : acc'
+            else go identifierToFind' nestingLevel' acc'
           else do
             let nnl = nextNestingLevel l
             if nnl < 0 then
-              wrapUp $ (T.reverse . T.dropWhile (/= '}') $ T.reverse l) : acc'
+              let finalLine = case T.find (== '}') l of
+                                Just _ ->
+                                  T.reverse . T.dropWhile (/= '}') $ T.reverse l
+                                Nothing ->
+                                  l
+              in wrapUp $ finalLine  : acc'
             else
-              findCustomTypeInFile h identifierToFind' nnl $ l : acc'
+              go identifierToFind' nnl $ l : acc'
         where wrapUp = pure . pure . mconcat . intersperse "\n" . reverse
               nextNestingLevel t = nestingLevel' + length (filter (== '{') s) - length (filter (== '}') s)
                 where s = toString t

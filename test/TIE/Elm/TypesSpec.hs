@@ -127,6 +127,9 @@ spec = do
     it "can find a non-record type alias" do
       s <- findType testFilePaths (NeededCustomType "S")
       s `shouldBe` Ok (NMAlias (AliasName "S") (TPrimitive PString), [])
+    it "can find a non-record type alias split over multiple lines" do
+      s <- findType testFilePaths (NeededCustomType "SOverTwoLines")
+      s `shouldBe` Ok (NMAlias (AliasName "SOverTwoLines") (TPrimitive PString), [])
     it "can find a record type which needs another custom type to be complete" do
       foo <- findType testFilePaths (NeededCustomType "Baz")
       foo `shouldBe` Ok
