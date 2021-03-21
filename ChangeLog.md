@@ -1,5 +1,9 @@
 # Changelog for TIE
 
+## Version 1.1.1
+
+- Bugfix: TIE no longer incorrectly reads non-record type aliases split over multiple lines
+
 ## Version 1.1.0
 
 - Add the ability to [override generated types](https://github.com/notquiteamonad/tie/blob/main/vault/Configuration.md)
