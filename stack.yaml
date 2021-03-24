@@ -17,8 +17,7 @@
 #
 # resolver: ./custom-snapshot.yaml
 # resolver: https://example.com/snapshots/2018-01-01.yaml
-resolver:
-  url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/17/5.yaml
+resolver: lts-17.5
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -41,8 +40,9 @@ packages:
 #   commit: e7b331f14bcffb8367cd58fbfc8b40ec7642100a
 #
 extra-deps:
-  - git: https://github.com/jhrcek/base-noprelude.git
-    commit: f382c80eb10521fb6a56d6451b6f983000cb010a
+  - git: https://github.com/AlistairB/base-noprelude.git
+    commit: 330a3d21d021169d391843cbaf2da6fe7dc9f08e
+    # nix-sha256: 1hspqi86w28235g2ldspfgr9qicr8nyjjfwn8sv4qz5kvv0rg868
   - safe-coloured-text-0.0.0.0@sha256:3e614882573291a911564a0b936b2449c4855c2e315086d1337a6e6c027cf2b0,1021
 
 # Override default flag values for local packages and extra-deps
