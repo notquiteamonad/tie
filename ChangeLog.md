@@ -1,5 +1,10 @@
 # Changelog for TIE
 
+## Version 2.0.0
+
+- **BREAKING**: The `--colour` or `--color` flag must now be passed to get coloured output. This flag is not available for Windows.
+- Add support for Windows
+
 ## Version 1.1.1
 
 - Bugfix: TIE no longer incorrectly reads non-record type aliases split over multiple lines

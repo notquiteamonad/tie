@@ -58,9 +58,7 @@ showUsage = do
   putTextLn "Available options:"
   putTextLn "        --help    Print this help message"
   putTextLn "    -w  --watch   Watch for changes in the specified directory and regenerate"
-  putTextLn "                  definitions every time a change occurs"
-  putTextLn "        --colour  Print coloured output."
-  putTextLn "        --color   Same as --colour.\n"
+  putTextLn "                  definitions every time a change occurs\n"
 
 printResponse :: Response Text (FilePath, Warnings) -> IO ()
 printResponse = \case
