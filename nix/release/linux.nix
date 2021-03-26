@@ -9,6 +9,5 @@ tie.projectCross.musl64.hsPkgs.tie.components.exes.tie-exe.override {
     "--ghc-option=-optl=-pthread"
     "--ghc-option=-optl=-static"
     "--ghc-option=-optl=-L${pkgs.gmp6.override { withStatic = true; }}/lib"
-    "--ghc-option=-optl=-L${pkgs.zlib.static}/lib"
   ];
 }
