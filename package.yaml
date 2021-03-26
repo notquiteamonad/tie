@@ -51,6 +51,8 @@ tests:
     default-extensions:
       - BlockArguments
     dependencies:
-      - hspec >= 2.7.6 && < 2.8
+      - hspec >= 2.7.8 && < 2.8
       - template-haskell >= 2.16.0 && < 2.17
       - tie
+    build-tools:
+      - hspec-discover >= 2.7.8 && < 2.8

@@ -76,6 +76,9 @@
             (hsPkgs."tie" or (errorHandler.buildDepError "tie"))
             (hsPkgs."tomland" or (errorHandler.buildDepError "tomland"))
             ];
+          build-tools = [
+            (hsPkgs.buildPackages.hspec-discover.components.exes.hspec-discover or (pkgs.buildPackages.hspec-discover or (errorHandler.buildToolDepError "hspec-discover:hspec-discover")))
+            ];
           buildable = true;
           modules = [ "Paths_tie" ];
           hsSourceDirs = [ "test" ];
