@@ -13,8 +13,10 @@ import           System.Environment    (getArgs)
 import           System.FSNotify       (eventPath, watchTree, withManager)
 import           System.IO             (hFlush)
 import           TIE.Lib               (Response (..), Warnings, interoperate)
-import           Text.Colour           (Chunk, bold, chunk, fore, green,
-                                        putChunks, red, underline, yellow)
+import           Text.Colour           (Chunk,
+                                        TerminalCapabilities (With8Colours),
+                                        bold, chunk, fore, green, putChunksWith,
+                                        red, underline, yellow)
 
 main :: IO ()
 main = do
@@ -53,7 +55,7 @@ cliOptions =
   ]
 
 showUsage :: IO ()
-showUsage = putChunks
+showUsage = putChunksWith With8Colours
     [ bold $ chunk "\nTIE - TypeScript Interoperator for Elm\n\n"
     , bold $ chunk "Usage: "
     , fore green . bold $ chunk "tie "
@@ -69,12 +71,12 @@ showUsage = putChunks
 printResponse :: Response Text (FilePath, Warnings) -> IO ()
 printResponse = \case
   Ok (path, warnings) ->
-    putChunks $ printWarnings warnings <>
+    putChunksWith With8Colours $ printWarnings warnings <>
       [ fore green . bold $ chunk "Done! You can see the generated type definitions at "
       , fore green . underline . chunk $ toText path <> "\n"
       ]
   Failed err -> do
-    putChunks
+    putChunksWith With8Colours
       ((fore red . bold $ chunk "Some errors were encountered, so new TypeScript definitions were not generated:\n\n")
       : ((\l -> fore red . chunk $ "  - " <> l <> "\n") <$> lines err))
 

@@ -43,7 +43,11 @@ extra-deps:
   - git: https://github.com/AlistairB/base-noprelude.git
     commit: 330a3d21d021169d391843cbaf2da6fe7dc9f08e
     # nix-sha256: 1hspqi86w28235g2ldspfgr9qicr8nyjjfwn8sv4qz5kvv0rg868
-  - safe-coloured-text-0.0.0.0@sha256:3e614882573291a911564a0b936b2449c4855c2e315086d1337a6e6c027cf2b0,1021
+  - git: https://github.com/NorfairKing/safe-coloured-text.git
+    commit: 2e61b50dfa65bed862aff903f574175cfc747e14
+    subdirs:
+      - safe-coloured-text
+    # nix-sha256: 1ag6g48sn403xpv5wk9h4zqfx2vv9s7vymhjz4181ij2cmzbgwzr
 
 # Override default flag values for local packages and extra-deps
 # flags: {}
