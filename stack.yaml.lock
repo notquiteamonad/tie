@@ -7,25 +7,30 @@ packages:
 - completed:
     name: base-noprelude
     version: 4.14.1.0
-    git: https://github.com/jhrcek/base-noprelude.git
+    git: https://github.com/AlistairB/base-noprelude.git
     pantry-tree:
       size: 823
-      sha256: b3226df5b2f565672cd83ed1cf88d98148142fd5759d9a68ceec77d4ead85338
-    commit: f382c80eb10521fb6a56d6451b6f983000cb010a
+      sha256: 5a4b6fa4cbd56db8c1629e463b6a83e074a27674c6c96e50175c95630d04e516
+    commit: 330a3d21d021169d391843cbaf2da6fe7dc9f08e
   original:
-    git: https://github.com/jhrcek/base-noprelude.git
-    commit: f382c80eb10521fb6a56d6451b6f983000cb010a
+    git: https://github.com/AlistairB/base-noprelude.git
+    commit: 330a3d21d021169d391843cbaf2da6fe7dc9f08e
 - completed:
-    hackage: safe-coloured-text-0.0.0.0@sha256:3e614882573291a911564a0b936b2449c4855c2e315086d1337a6e6c027cf2b0,1021
+    subdir: safe-coloured-text
+    name: safe-coloured-text
+    version: 0.0.0.0
+    git: https://github.com/NorfairKing/safe-coloured-text.git
     pantry-tree:
-      size: 376
-      sha256: 0bec7a33efcec8989ba23a906ebdbbe85af70a3ee2993be99eb0911deb43ce3b
+      size: 427
+      sha256: 946034326b05c263569703fa14d9ee8250f42b1f2e35b95b85dfa5f04e8c3511
+    commit: 2e61b50dfa65bed862aff903f574175cfc747e14
   original:
-    hackage: safe-coloured-text-0.0.0.0@sha256:3e614882573291a911564a0b936b2449c4855c2e315086d1337a6e6c027cf2b0,1021
+    subdir: safe-coloured-text
+    git: https://github.com/NorfairKing/safe-coloured-text.git
+    commit: 2e61b50dfa65bed862aff903f574175cfc747e14
 snapshots:
 - completed:
     size: 565266
     url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/17/5.yaml
     sha256: 78e8ebabf11406261abbc95b44f240acf71802630b368888f6d758de7fc3a2f7
-  original:
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/17/5.yaml
+  original: lts-17.5

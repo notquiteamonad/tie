@@ -5,7 +5,7 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           tie
-version:        0.1.1.1
+version:        0.2.0.0
 description:    Please see the README on GitHub at <https://github.com/notquiteamonad/tie#readme>
 homepage:       https://github.com/notquiteamonad/tie#readme
 bug-reports:    https://github.com/notquiteamonad/tie/issues
@@ -54,12 +54,12 @@ library
     , tomland >=1.3.2 && <1.4
   default-language: Haskell2010
 
-executable tie-exe
+executable tie-linux
   main-is: Main.hs
   other-modules:
       Paths_tie
   hs-source-dirs:
-      app
+      app/linux
   default-extensions:
       OverloadedStrings
   ghc-options: -Wall -O2 -threaded -rtsopts -with-rtsopts=-N
@@ -70,6 +70,26 @@ executable tie-exe
     , fsnotify >=0.3.0 && <0.4
     , relude >=0.7.0 && <0.8
     , safe-coloured-text >=0.0.0 && <0.1
+    , text >=1.2.4 && <1.3
+    , tie
+    , tomland >=1.3.2 && <1.4
+  default-language: Haskell2010
+
+executable tie-windows
+  main-is: Main.hs
+  other-modules:
+      Paths_tie
+  hs-source-dirs:
+      app/windows
+  default-extensions:
+      OverloadedStrings
+  ghc-options: -Wall -O2 -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base-noprelude >=4.7 && <5
+    , directory >=1.3.6 && <1.4
+    , filepath >=1.4.2 && <1.5
+    , fsnotify >=0.3.0 && <0.4
+    , relude >=0.7.0 && <0.8
     , text >=1.2.4 && <1.3
     , tie
     , tomland >=1.3.2 && <1.4
@@ -97,11 +117,13 @@ test-suite tie-test
       OverloadedStrings
       BlockArguments
   ghc-options: -Wall
+  build-tool-depends:
+      hspec-discover:hspec-discover >=2.7.8 && <2.8
   build-depends:
       base-noprelude >=4.7 && <5
     , directory >=1.3.6 && <1.4
     , filepath >=1.4.2 && <1.5
-    , hspec >=2.7.6 && <2.8
+    , hspec >=2.7.8 && <2.8
     , relude >=0.7.0 && <0.8
     , template-haskell >=2.16.0 && <2.17
     , text >=1.2.4 && <1.3

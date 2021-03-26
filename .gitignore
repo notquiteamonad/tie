@@ -13,3 +13,10 @@
 
 # Generated test files
 /test/test-data/small-valid-project/Main/index.d.ts
+
+# Nix expression result
+result
+
+# Built binaries
+/build
+

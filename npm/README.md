@@ -3,9 +3,8 @@
 TIE is a tool for generating TypeScript definitions for elm projects such that
 complex data structures can be passed through flags and ports safely.
 
-**Note on Support:** Currently, TIE only supports Linux. If you're able to help add
-support for Windows or Mac, please check out [#25](https://github.com/notquiteamonad/tie/issues/25) and
-[#27](https://github.com/notquiteamonad/tie/issues/27).
+**Note on Support:** Currently, TIE only supports Windows and Linux. If you're able to help add
+support for Mac, please check out [#27](https://github.com/notquiteamonad/tie/issues/27).
 
 ## Motivation
 
@@ -109,8 +108,7 @@ The table below outlines TIE's support for different Elm types:
 
 ## Limitations
 
-* TIE is only available on Linux at present. ([#25](https://github.com/notquiteamonad/tie/issues/25) and
-  [#27](https://github.com/notquiteamonad/tie/issues/27))
+* TIE is only available on Windows and Linux at present ([#27](https://github.com/notquiteamonad/tie/issues/27))
 * TIE does not support tuple types (yet) and behaviour for them may be unexpected
   ([#17](https://github.com/notquiteamonad/tie/issues/17))
 * TypeScript makes no distinction between integers and floats, which could lead to decoding

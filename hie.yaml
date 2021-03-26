@@ -3,11 +3,17 @@ cradle:
     - path: "./src"
       component: "tie:lib"
 
-    - path: "./app/Main.hs"
-      component: "tie:exe:tie-exe"
+    - path: "./app/linux/Main.hs"
+      component: "tie:exe:tie-linux"
 
-    - path: "./app/Paths_tie.hs"
-      component: "tie:exe:tie-exe"
+    - path: "./app/linux/Paths_tie.hs"
+      component: "tie:exe:tie-linux"
+
+    - path: "./app/windows/Main.hs"
+      component: "tie:exe:tie-windows"
+
+    - path: "./app/windows/Paths_tie.hs"
+      component: "tie:exe:tie-windows"
 
     - path: "./test"
       component: "tie:test:tie-test"

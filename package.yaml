@@ -1,5 +1,5 @@
 name: tie
-version: 0.1.1.1
+version: 0.2.0.0
 license: BSD3
 github: "notquiteamonad/tie"
 author: "notquiteamonad"
@@ -31,9 +31,9 @@ library:
   source-dirs: src
 
 executables:
-  tie-exe:
+  tie-linux:
     main: Main.hs
-    source-dirs: app
+    source-dirs: app/linux
     ghc-options:
       - -O2
       - -threaded
@@ -41,6 +41,17 @@ executables:
       - -with-rtsopts=-N
     dependencies:
       - safe-coloured-text >= 0.0.0 && < 0.1
+      - fsnotify >= 0.3.0 && < 0.4
+      - tie
+  tie-windows:
+    main: Main.hs
+    source-dirs: app/windows
+    ghc-options:
+      - -O2
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
       - fsnotify >= 0.3.0 && < 0.4
       - tie
 
@@ -51,6 +62,8 @@ tests:
     default-extensions:
       - BlockArguments
     dependencies:
-      - hspec >= 2.7.6 && < 2.8
+      - hspec >= 2.7.8 && < 2.8
       - template-haskell >= 2.16.0 && < 2.17
       - tie
+    build-tools:
+      - hspec-discover >= 2.7.8 && < 2.8
