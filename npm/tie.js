@@ -2,8 +2,10 @@ const { spawn } = require("child_process");
 const cTable = require("console.table");
 const fs = require("fs");
 const { https } = require("follow-redirects");
+const gunzip = require("gunzip-maybe");
 const os = require("os");
 const { join } = require("path");
+const tar = require("tar-fs");
 const { version } = require("./package.json");
 
 const error = (msg) => {
@@ -16,19 +18,25 @@ const supportedPlatforms = [
     TYPE: "Linux",
     ARCHITECTURE: "x64",
   },
+  {
+    TYPE: "Windows_NT",
+    ARCHITECTURE: "x64",
+  },
 ];
 
 const type = os.type();
 const architecture = os.arch();
 
+const binPath = join(__dirname, "bin");
+
 const installBinary = () => {
   return new Promise((resolve) => {
     console.log(`Downloading TIE v${version} for ${type}...`);
-    if (type == "Linux") {
-      fs.mkdirSync(join(__dirname, "bin"));
+    if (type === "Linux") {
+      fs.mkdirSync(binPath, { recursive: true });
       installLinuxBinary().then(() => resolve());
-    } else if (type == "Windows") {
-      fs.mkdirSync(join(__dirname, "bin"));
+    } else if (type == "Windows_NT") {
+      fs.mkdirSync(binPath);
       installWindowsBinary().then(() => resolve());
     } else {
       error("Could not find a binary for target platform.");
@@ -36,7 +44,7 @@ const installBinary = () => {
   });
 };
 
-const linuxBinaryPath = join(__dirname, "bin", "tie");
+const linuxBinaryPath = join(binPath, "tie");
 
 const installLinuxBinary = () => {
   return new Promise((resolve) => {
@@ -61,8 +69,41 @@ const installLinuxBinary = () => {
   });
 };
 
+const windowsBinaryPath = join(binPath, "tie-windows", "tie-windows.exe");
+
+const installWindowsBinary = () => {
+  return new Promise((resolve) => {
+    https
+      .get(
+        `https://github.com/notquiteamonad/tie/releases/download/${version}/tie-${version}-windows-x64.tar.gz`,
+        (res) => {
+          if (res.statusCode == 200) {
+            res.pipe(gunzip()).pipe(
+              tar.extract(binPath, {
+                dmode: 0o755,
+                fmode: 0o755,
+                finish: resolve,
+              }),
+            );
+          } else {
+            error("Could not download TIE executable.");
+          }
+        },
+      )
+      .on("error", () => {
+        error("Could not download TIE executable.");
+      });
+  });
+};
+
 function runTIE() {
-  const tie = spawn(linuxBinaryPath, process.argv.slice(2), {
+  const path = type === "Linux"
+    ? linuxBinaryPath
+    : (type === "Windows_NT"
+        ? windowsBinaryPath
+        : error("Can't find TIE binary path. Unsupported OS?")
+      );
+  const tie = spawn(path, process.argv.slice(2), {
     shell: true,
     stdio: "inherit",
   });
@@ -86,15 +127,14 @@ if (!onSupportedPlatform) {
   error(
     `Platform with type "${type}" and architecture "${architecture}" is not currently supported by TIE.\nYour system must be one of the following:\n\n${cTable.getTable(
       supportedPlatforms,
-    )}\nStatus of support for Mac and Windows is available at the following URLS:\n  Mac: https://github.com/notquiteamonad/tie/issues/27\n  Windows: https://github.com/notquiteamonad/tie/issues/25`,
+    )}\nStatus of support for Mac is available at the following URL: https://github.com/notquiteamonad/tie/issues/27`,
   );
 }
 
-fs.access(join(__dirname, "bin"), fs.constants.F_OK, (doesNotExist) => {
+fs.access(binPath, fs.constants.F_OK, (doesNotExist) => {
   if (doesNotExist) {
-    installBinary(type).then(() => runTIE());
+      installBinary(type).then(() => runTIE());
   } else {
-    runTIE();
+      runTIE();
   }
 });
-
