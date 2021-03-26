@@ -7,7 +7,7 @@ mkdir -p $projectDir/build/linux
 
 # Linux Build
 nix-build $projectDir/nix/release/linux.nix
-cp -L ./result/bin/tie-exe $projectDir/build/linux/tie
+cp -L ./result/bin/tie-linux $projectDir/build/linux/tie
 
 # Windows Build
 nix-build $projectDir/nix/release/windows.nix

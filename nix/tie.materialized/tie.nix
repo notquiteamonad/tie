@@ -45,7 +45,7 @@
         hsSourceDirs = [ "src" ];
         };
       exes = {
-        "tie-exe" = {
+        "tie-linux" = {
           depends = [
             (hsPkgs."base-noprelude" or (errorHandler.buildDepError "base-noprelude"))
             (hsPkgs."directory" or (errorHandler.buildDepError "directory"))
@@ -59,7 +59,23 @@
             ];
           buildable = true;
           modules = [ "Paths_tie" ];
-          hsSourceDirs = [ "app" ];
+          hsSourceDirs = [ "app/linux" ];
+          mainPath = [ "Main.hs" ];
+          };
+        "tie-windows" = {
+          depends = [
+            (hsPkgs."base-noprelude" or (errorHandler.buildDepError "base-noprelude"))
+            (hsPkgs."directory" or (errorHandler.buildDepError "directory"))
+            (hsPkgs."filepath" or (errorHandler.buildDepError "filepath"))
+            (hsPkgs."fsnotify" or (errorHandler.buildDepError "fsnotify"))
+            (hsPkgs."relude" or (errorHandler.buildDepError "relude"))
+            (hsPkgs."text" or (errorHandler.buildDepError "text"))
+            (hsPkgs."tie" or (errorHandler.buildDepError "tie"))
+            (hsPkgs."tomland" or (errorHandler.buildDepError "tomland"))
+            ];
+          buildable = true;
+          modules = [ "Paths_tie" ];
+          hsSourceDirs = [ "app/windows" ];
           mainPath = [ "Main.hs" ];
           };
         };
