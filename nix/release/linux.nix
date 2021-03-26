@@ -1,5 +1,5 @@
 let
-  tie = import ../default.nix { };
+  tie = import ../../default.nix { };
   pkgs = import <nixpkgs> { };
 in
 tie.projectCross.musl64.hsPkgs.tie.components.exes.tie-exe.override {

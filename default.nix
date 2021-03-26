@@ -10,6 +10,6 @@
     src = ./.;
   };
   stack-sha256 = "1r8g2jfa129cravfig96armk439fcm1y5152xhfqbyav152rzi7g";
-  materialized = ./tie.materialized;
+  materialized = ./nix/tie.materialized;
   checkMaterialization = true;
 }
