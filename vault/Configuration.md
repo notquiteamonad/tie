@@ -81,6 +81,24 @@ property = "MySmallNumber"
 type = "1 | 2"
 ```
 
+#### Overriding Flags
+
+You can override flags using an Elm type alias:
+
+```elm
+type alias Flags = String
+
+main : Program Flags model msg
+```
+
+and overriding it it:
+
+```toml
+[[override]]
+property = "Flags"
+type = '"big" | "small"'
+```
+
 #### Rules for Override Blocks
 
 * You can add as many override blocks as you need
