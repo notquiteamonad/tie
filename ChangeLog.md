@@ -1,5 +1,11 @@
 # Changelog for TIE
 
+## Version 2.1.0
+
+- ([#34](https://github.com/notquiteamonad/tie/issues/34)) When in watch mode,
+  TIE will now regenerate definition if .TIE.toml changes
+  (the previous behaviour was to just regenerate when .elm files changed).
+
 ## Version 2.0.0
 
 - **BREAKING**: The `--colour` or `--color` flag must now be passed to get coloured output. This flag is not available for Windows.

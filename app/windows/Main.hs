@@ -10,7 +10,8 @@ import           System.Console.GetOpt (ArgDescr (NoArg), ArgOrder (Permute),
                                         OptDescr, getOpt)
 import qualified System.Console.GetOpt as GetOpt (OptDescr (Option))
 import           System.Environment    (getArgs)
-import           System.FSNotify       (eventPath, watchTree, withManager)
+import           System.FSNotify       (eventPath, watchDir, watchTree,
+                                        withManager)
 import           System.IO             (hFlush)
 import           TIE.Lib               (Response (..), Warnings, interoperate)
 
@@ -31,15 +32,17 @@ main = do
       exitFailure
     else do
       let dirName = Relude.Unsafe.head dirNames
+          regenerate :: a -> IO ()
+          regenerate = const $ do
+            putTextLn "\nRegenerating..."
+            interoperate dirName >>= printResponse
+            hFlush stdout
       interoperate dirName >>= printResponse
       if Watch `elem` options then do
         putTextLn "Watching for changes..."
         withManager \mgr -> do
-          _ <- watchTree mgr dirName  (isSuffixOf ".elm" . toText . eventPath) .
-            const $ do
-              putTextLn "\nRegenerating..."
-              interoperate dirName >>= printResponse
-              hFlush stdout
+          _ <- watchTree mgr dirName  (isSuffixOf ".elm" . toText . eventPath) regenerate
+          _ <- watchDir mgr "." (isSuffixOf ".TIE.toml" . toText . eventPath) regenerate
           forever $ threadDelay 1000000
       else pass
 

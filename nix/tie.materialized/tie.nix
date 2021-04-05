@@ -11,7 +11,7 @@
     flags = {};
     package = {
       specVersion = "1.12";
-      identifier = { name = "tie"; version = "0.2.0.0"; };
+      identifier = { name = "tie"; version = "0.2.1.0"; };
       license = "BSD-3-Clause";
       copyright = "Copyright notquiteamonad 2021";
       maintainer = "44178347+notquiteamonad@users.noreply.github.com";
