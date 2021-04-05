@@ -1,5 +1,7 @@
 # TIE - TypeScript Interoperator for Elm
 
+[![wakatime](https://wakatime.com/badge/github/notquiteamonad/tie.svg)](https://wakatime.com/badge/github/notquiteamonad/tie)
+
 TIE is a tool for generating TypeScript definitions for elm projects such that
 complex data structures can be passed through flags and ports safely.
 
