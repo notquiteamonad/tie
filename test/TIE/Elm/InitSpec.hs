@@ -10,7 +10,7 @@ import           TIE.TypeScript  (Argument (Argument),
                                   FunctionName (FunctionName),
                                   Member (MProperty),
                                   NamespaceMember (NMFunction),
-                                  PrimitiveName (PNull, PNumber, PString, PVoid),
+                                  PrimitiveName (PNull, PNumber, PString),
                                   PropertyName (PropertyName),
                                   ReferenceName (ReferenceName),
                                   TSType (TInlineInterface, TPrimitive, TReference))
@@ -44,7 +44,7 @@ spec = do
     it "Reads flags from an unusually formatted main function" do
       flags <- generateInitFunction (moreMainExamplesDir </> "Main_Unusual_Formatting.elm")
       flags `shouldBe` mainFunctionWithFlags
-        [MProperty (PropertyName "flags") $ TPrimitive PNumber <> TPrimitive PVoid <> TPrimitive PNull] []
+        [MProperty (PropertyName "flags") $ TPrimitive PNumber <> TPrimitive PNull] []
     it "Reads flags of a non-literal type" do
       flags <- generateInitFunction (moreMainExamplesDir </> "Main_Alias_Flags.elm")
       flags `shouldBe` mainFunctionWithFlags [MProperty (PropertyName "flags") $ TReference (ReferenceName "Elm.Main.S")] [NeededCustomType "Elm.Main.S"]

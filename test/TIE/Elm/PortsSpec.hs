@@ -48,7 +48,6 @@ spec = do
                             TFunction
                               [Argument (ArgumentName "data") $
                                 TArray (TPrimitive PString)
-                                <> TPrimitive PVoid
                                 <> TPrimitive PNull
                               ]
                               (TPrimitive PVoid)
@@ -78,7 +77,6 @@ spec = do
                       Function (FunctionName "send")
                         [ Argument (ArgumentName "data") $
                             TArray (TPrimitive PString)
-                            <> TPrimitive PVoid
                             <> TPrimitive PNull
                         ] $ TPrimitive PVoid
                   ]

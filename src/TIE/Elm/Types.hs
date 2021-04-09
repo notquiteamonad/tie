@@ -29,7 +29,7 @@ import           TIE.TypeScript     (AliasName (AliasName), Exported (Exported),
                                      Member (MProperty, MPropertyGroup),
                                      Members,
                                      NamespaceMember (NMAlias, NMInterface),
-                                     PrimitiveName (PBoolean, PNull, PNumber, PString, PUnknown, PVoid),
+                                     PrimitiveName (PBoolean, PNull, PNumber, PString, PUnknown),
                                      PropertyName (PropertyName),
                                      ReferenceName (ReferenceName),
                                      TSType (TArray, TPrimitive, TReference))
@@ -73,7 +73,7 @@ instance Semigroup ElmType where
   Note: This will only extract the first type given as it uses `readNextExpression`.
 
   >>> elmTypeFromText "Maybe String"
-  Ok (ElmPrimitiveType (TPrimitive PString <> TPrimitive PVoid <> TPrimitive PNull ))
+  Ok (ElmPrimitiveType (TPrimitive PString <> TPrimitive PNull ))
 -}
 elmTypeFromText :: Text -> Response Text ElmType
 elmTypeFromText t = case readNextExpression $ "(" <> t <> ")" of
@@ -88,10 +88,10 @@ elmTypeFromText t = case readNextExpression $ "(" <> t <> ")" of
   Just expr                   ->
     case stripPrefix "Maybe " expr of
       Just mValue -> case elmTypeFromText mValue of
-        Ok (ElmPrimitiveType p) -> Ok . ElmPrimitiveType $ p <> TPrimitive PVoid <> TPrimitive PNull
-        Ok (CustomType c nct)   -> Ok $ CustomType (c <> TPrimitive PVoid <> TPrimitive PNull) nct
-        Ok (ElmArrayType a) -> Ok $ ElmArrayType a <> ElmPrimitiveType (TPrimitive PVoid <> TPrimitive PNull)
-        Ok (t1 `ETUnion ` t2) -> Ok $ t1 <> t2 <> ElmPrimitiveType (TPrimitive PVoid <> TPrimitive PNull)
+        Ok (ElmPrimitiveType p) -> Ok . ElmPrimitiveType $ p <> TPrimitive PNull
+        Ok (CustomType c nct)   -> Ok $ CustomType (c <> TPrimitive PNull) nct
+        Ok (ElmArrayType a) -> Ok $ ElmArrayType a <> ElmPrimitiveType (TPrimitive PNull)
+        Ok (t1 `ETUnion ` t2) -> Ok $ t1 <> t2 <> ElmPrimitiveType (TPrimitive PNull)
         Failed f -> Failed f
       Nothing ->
         case stripPrefix "List " expr of

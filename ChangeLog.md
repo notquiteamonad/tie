@@ -1,5 +1,10 @@
 # Changelog for TIE
 
+## Version 2.1.1
+
+- Bugfix ([#35](https://github.com/notquiteamonad/tie/issues/35)): TIE no longer generates
+  definitions for `Maybe` values including `void` as an option, as Elm would reject such values.
+
 ## Version 2.1.0
 
 - ([#34](https://github.com/notquiteamonad/tie/issues/34)) When in watch mode,

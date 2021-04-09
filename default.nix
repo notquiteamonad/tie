@@ -9,7 +9,7 @@
     name = "tie";
     src = ./.;
   };
-  stack-sha256 = "0ax8bx84wj5w8zn4992dsx383nz2fh5wh8ygqsrd94b1bnk5mmrz";
+  stack-sha256 = "1vp8xwm5rrgvy62qccqcqf2zfv9k74p4rhlykb4m35669sqz60z9";
   materialized = ./nix/tie.materialized;
   checkMaterialization = true;
 }

@@ -13,7 +13,7 @@ import           TIE.TypeScript        (AliasName (AliasName),
                                         InterfaceName (InterfaceName),
                                         Member (MProperty),
                                         NamespaceMember (NMAlias, NMInterface),
-                                        PrimitiveName (PBoolean, PNull, PNumber, PString, PUnknown, PVoid),
+                                        PrimitiveName (PBoolean, PNull, PNumber, PString, PUnknown),
                                         PropertyName (PropertyName),
                                         ReferenceName (ReferenceName),
                                         TSType (TPrimitive, TReference))
@@ -43,13 +43,13 @@ spec = do
       elmTypeFromText "()" `shouldBe` Ok (ElmPrimitiveType (TPrimitive PNull))
     it "can parse maybe values of literals" do
       elmTypeFromText "Maybe String" `shouldBe`
-        Ok (ElmPrimitiveType (TPrimitive PString <> TPrimitive PVoid <> TPrimitive PNull ))
+        Ok (ElmPrimitiveType (TPrimitive PString <> TPrimitive PNull ))
       elmTypeFromText "Maybe ()" `shouldBe`
-        Ok (ElmPrimitiveType (TPrimitive PVoid <> TPrimitive PNull))
+        Ok (ElmPrimitiveType (TPrimitive PNull))
     it "can parse maybe values of custom interfaces" do
       elmTypeFromText "Maybe Foo" `shouldBe`
         Ok ( CustomType
-              (TReference (ReferenceName "Elm.Main.Foo") <> TPrimitive PVoid <> TPrimitive PNull)
+              (TReference (ReferenceName "Elm.Main.Foo") <> TPrimitive PNull)
               (NeededCustomType "Elm.Main.Foo")
            )
     it "can parse a list of literals" do
@@ -57,7 +57,7 @@ spec = do
       elmTypeFromText "List ()" `shouldBe` Ok (ElmArrayType (ElmPrimitiveType $ TPrimitive PNull))
     it "can parse a list of maybe values" do
       elmTypeFromText "List (Maybe String)" `shouldBe`
-        Ok (ElmArrayType (ElmPrimitiveType $ TPrimitive PString <> TPrimitive PVoid <> TPrimitive PNull))
+        Ok (ElmArrayType (ElmPrimitiveType $ TPrimitive PString <> TPrimitive PNull))
     it "can parse a list of custom types" do
       elmTypeFromText "List Foo" `shouldBe`
         Ok (ElmArrayType
@@ -75,7 +75,7 @@ spec = do
                     (TReference (ReferenceName "Elm.Main.Foo"))
                     (NeededCustomType "Elm.Main.Foo")
                   )
-                <> ElmPrimitiveType (TPrimitive PVoid <> TPrimitive PNull)
+                <> ElmPrimitiveType (TPrimitive PNull)
               )
            )
     it "can parse array values" do
@@ -119,7 +119,7 @@ spec = do
         (NMInterface $ Interface Exported (InterfaceName "Bar")
           [ MProperty (PropertyName "userId") (TPrimitive PNumber)
           , MProperty (PropertyName "username") (TPrimitive PString)
-          , MProperty (PropertyName "email") (TPrimitive PString <> TPrimitive PVoid <> TPrimitive PNull)
+          , MProperty (PropertyName "email") (TPrimitive PString <> TPrimitive PNull)
           , MProperty (PropertyName "bar") (TReference (ReferenceName "Elm.Main.Bar"))
           ]
         , [NeededCustomType "Elm.Main.Bar"]
