@@ -1,22 +1,11 @@
-.stack-work/
-*~
+# Direnv
+/.direnv
 
-# Obsidian files
-**/.obsidian/cache
-**/.obsidian/workspace
+# Haskell
+dist-newstyle
 
-# Built executable
-/build
-
-# HSpec Failures
-/.hspec-failures
-
-# Generated test files
-/test/test-data/small-valid-project/Main/index.d.ts
-
-# Nix expression result
+# Nix
 result
 
-# Built binaries
-/build
-
+# Pre-Commit Hooks
+/.pre-commit-config.yaml

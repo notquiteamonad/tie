@@ -1,4 +1,0 @@
-config:
-  line-length: false
-ignores:
-  - "npm/node_modules"

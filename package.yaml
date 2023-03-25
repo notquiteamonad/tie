@@ -1,69 +1,77 @@
 name: tie
-version: 0.2.1.1
-license: BSD3
+version: 0.1.0.0
 github: "notquiteamonad/tie"
 author: "notquiteamonad"
 maintainer: "44178347+notquiteamonad@users.noreply.github.com"
-copyright: "Copyright notquiteamonad 2021"
-
-default-extensions:
-  - OverloadedStrings
-
+copyright: "Copyright notquiteamonad"
 description: Please see the README on GitHub at <https://github.com/notquiteamonad/tie#readme>
 
-dependencies:
-  - base-noprelude >= 4.7 && < 5
-  - directory >= 1.3.6 && < 1.4
-  - filepath >= 1.4.2 && < 1.5
-  - relude >= 0.7.0 && < 0.8
-  - text >= 1.2.4 && < 1.3
-  - tomland >= 1.3.2 && < 1.4
+default-extensions:
+  - BlockArguments
+  - DataKinds
+  - DeriveGeneric
+  - DerivingStrategies
+  - DerivingVia
+  - FlexibleContexts
+  - GADTs
+  - KindSignatures
+  - LambdaCase
+  - NamedFieldPuns
+  - OverloadedStrings
+  - RankNTypes
+  - RecordWildCards
+  - ScopedTypeVariables
+  - StrictData
+  - TypeApplications
+  - TypeFamilies
+  - TypeOperators
 
-extra-source-files:
-  - README.md
-  - ChangeLog.md
-  - LICENSE
+flags:
+  prod:
+    default: false
+    description: Enable production defaults
+    manual: true
 
 ghc-options:
-  - -Wall
+  - "-Wall"
+  - "-Wcpp-undef"
+  - "-Widentities"
+  - "-Wincomplete-patterns"
+  - "-Wincomplete-record-updates"
+  - "-Wincomplete-uni-patterns"
+  - "-Wmissing-deriving-strategies"
+  - "-Wmissing-import-lists"
+  - "-Wmissing-signatures"
+  - "-Wpartial-fields"
+  - "-Wredundant-constraints"
+  - "-fplugin=Effectful.Plugin"
+when:
+  - condition: flag(prod)
+    ghc-options:
+      - "-O2"
+      - "-Werror"
+
+dependencies:
+  - name: base
+    version: "== 4.16.3.0"
+    mixin:
+      - hiding (Prelude)
+  - effectful-core == 2.2.2.1
+  - effectful-plugin == 1.0.0.0
+  - relude == 1.1.0.0
 
 library:
   source-dirs: src
-
+  dependencies:
+    - effectful-th == 1.0.0.1
 executables:
-  tie-linux:
+  tie-exe:
     main: Main.hs
-    source-dirs: app/linux
+    source-dirs: app
     ghc-options:
-      - -O2
-      - -threaded
-      - -rtsopts
-      - -with-rtsopts=-N
+      - "-O2"
+      - "-threaded"
+      - "-rtsopts"
+      - "-with-rtsopts=-N"
     dependencies:
-      - safe-coloured-text >= 0.0.0 && < 0.1
-      - fsnotify >= 0.3.0 && < 0.4
       - tie
-  tie-windows:
-    main: Main.hs
-    source-dirs: app/windows
-    ghc-options:
-      - -O2
-      - -threaded
-      - -rtsopts
-      - -with-rtsopts=-N
-    dependencies:
-      - fsnotify >= 0.3.0 && < 0.4
-      - tie
-
-tests:
-  tie-test:
-    main: Spec.hs
-    source-dirs: test
-    default-extensions:
-      - BlockArguments
-    dependencies:
-      - hspec >= 2.7.8 && < 2.8
-      - template-haskell >= 2.16.0 && < 2.17
-      - tie
-    build-tools:
-      - hspec-discover >= 2.7.8 && < 2.8
