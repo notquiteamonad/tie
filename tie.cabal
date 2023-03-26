@@ -5,7 +5,7 @@ cabal-version: 2.0
 -- see: https://github.com/sol/hpack
 
 name:           tie
-version:        0.1.0.0
+version:        3.0.0.0
 description:    Please see the README on GitHub at <https://github.com/notquiteamonad/tie#readme>
 homepage:       https://github.com/notquiteamonad/tie#readme
 bug-reports:    https://github.com/notquiteamonad/tie/issues
@@ -28,6 +28,12 @@ flag prod
 library
   exposed-modules:
       Prelude
+      TIE
+      TIE.Data.Config
+      TIE.Effect.Fatal
+      TIE.Effect.LoadConfig
+      TIE.Effect.Log
+      TIE.Effect.Path
   other-modules:
       Paths_tie
   autogen-modules:
@@ -55,10 +61,14 @@ library
       TypeOperators
   ghc-options: -Wall -Wcpp-undef -Widentities -Wincomplete-patterns -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-deriving-strategies -Wmissing-import-lists -Wmissing-signatures -Wpartial-fields -Wredundant-constraints -fplugin=Effectful.Plugin
   build-depends:
-      base ==4.16.3.0
+      ansi-terminal ==0.11.4
+    , base ==4.16.3.0
+    , dhall ==1.41.2
+    , effectful ==2.2.2.0
     , effectful-core ==2.2.2.1
     , effectful-plugin ==1.0.0.0
     , effectful-th ==1.0.0.1
+    , exceptions ==0.10.4
     , relude ==1.1.0.0
   mixins:
       base hiding (Prelude)

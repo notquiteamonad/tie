@@ -1,5 +1,5 @@
 name: tie
-version: 0.1.0.0
+version: 3.0.0.0
 github: "notquiteamonad/tie"
 author: "notquiteamonad"
 maintainer: "44178347+notquiteamonad@users.noreply.github.com"
@@ -63,7 +63,11 @@ dependencies:
 library:
   source-dirs: src
   dependencies:
+    - ansi-terminal == 0.11.4
+    - dhall == 1.41.2
+    - effectful == 2.2.2.0
     - effectful-th == 1.0.0.1
+    - exceptions == 0.10.4
 executables:
   tie-exe:
     main: Main.hs
