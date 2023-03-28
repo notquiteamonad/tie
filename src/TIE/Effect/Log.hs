@@ -8,14 +8,14 @@ import Effectful (Eff, Effect, IOE, type (:>))
 import Effectful.Dispatch.Dynamic (interpret)
 import Effectful.TH (makeEffect_)
 import System.Console.ANSI
-  ( Color (Blue, Red, Yellow),
+  ( Color (Blue, Green, Red, Yellow),
     ColorIntensity (Vivid),
     ConsoleLayer (Foreground),
     SGR (Reset, SetColor),
     hSetSGR,
   )
 
-data Severity = Info | Warning | Error
+data Severity = Debug | Info | Warning | Error
   deriving stock (Show)
 
 data Log :: Effect where
@@ -36,6 +36,7 @@ runLog = interpret \_ (Log severity msg) -> liftIO (putSeverity severity *> hPut
 
 severityColour :: Severity -> Color
 severityColour = \case
-  Info -> Blue
+  Debug -> Blue
+  Info -> Green
   Warning -> Yellow
   Error -> Red
